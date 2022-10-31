@@ -3,15 +3,10 @@ import requests
 
 
 class CianParser:
-    regions = {
-        "rostov": "175776",
-        "tagan": "5008"
-    }
     params = {
         'deal_type': 'sale',
         'engine_version': '2',
         'offer_type': 'flat',
-        'region': '4959',
         'room1': '1',
         'room2': '1',
         'room3': '1',
@@ -38,22 +33,15 @@ class CianParser:
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36',
     }
 
-    def __init__(self, region):
+    def __init__(self, region='1'):
         self.url = 'https://www.cian.ru/export/xls/offers/'
         self.region = region
-
-    @property
-    def get_region(self):
-        try:
-            return self.regions[self.region]
-        except Exception:
-            return 1
 
     @property
     def get_doc(self):
         with requests.session() as session:
             session.headers = self.headers
-            params = self.params[self.region] = self.get_region
+            params = self.params["region"] = self.region
             scraper = cfscrape.create_scraper(sess=session)
             response = scraper.get('https://www.cian.ru/export/xls/offers/', params=params)
             return response.content
