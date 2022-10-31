@@ -43,5 +43,5 @@ class CianParser:
             session.headers = self.headers
             params = self.params["region"] = self.region
             scraper = cfscrape.create_scraper(sess=session)
-            response = scraper.get('https://www.cian.ru/export/xls/offers/', params=params)
+            response = scraper.get(self.url, params=params)
             return response.content
