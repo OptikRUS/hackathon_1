@@ -7,12 +7,7 @@ class CianParser:
         'deal_type': 'sale',
         'engine_version': '2',
         'offer_type': 'flat',
-        'room1': '1',
-        'room2': '1',
-        'room3': '1',
-        'room4': '1',
-        'room5': '1',
-        'room6': '1',
+        'origin': 'map',
     }
 
     headers = {
@@ -55,9 +50,10 @@ class CianParser:
                       'Chrome/107.0.0.0 Safari/537.36',
     }
 
-    def __init__(self, region='1'):
+    def __init__(self, bbox, room_type='1'):
         self.url = 'https://www.cian.ru/export/xls/offers/'
-        self.params["region"] = region
+        self.params["bbox"] = bbox
+        self.params[f"room{room_type}"] = '1'
 
     @property
     def get_doc(self):
