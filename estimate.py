@@ -35,7 +35,6 @@ class PoolEstimate:
         # Return the dataframe with missing information
         return mis_val_table_ren_columns
 
-
     def make_data_ready_for_work(
             self,
             df,
@@ -51,9 +50,14 @@ class PoolEstimate:
         missing_columns = list(missing_df[missing_df['% of Total Values'] > 40].index)
         if is_balcony_cor:
             missing_columns.remove('Балкон')
+        if is_repair_state:
+            missing_columns.remove('Ремонт')
         missing_columns.append('Высота потолков, м')
         missing_columns.append('Тип')
+        missing_columns.append('Название ЖК')
         missing_columns.append('Окна')
+        missing_columns.append('Количество комнат')
+        missing_columns.append('Описание')
         df = df.drop(columns=list(missing_columns))
 
         if is_balcony_cor:
@@ -84,7 +88,21 @@ class PoolEstimate:
             df["Площадь кухни"] = df["Площадь, м2"].str.split('/').str[2] if len(
                 df["Площадь, м2"].str.split('/')) > 2 else np.nan
 
+        if is_repair_state:
+            replacements = {
+                'Ремонт': {
+                    'Без': 0,
+                    'Косметический': 1,
+                    'Евро|Диза': 2,
+                }
+            }
+            df.replace(replacements, inplace=True, regex=True)
+            df['Ремонт'] = np.where(df['Ремонт'].isna(), 0, df['Ремонт'])
+
         df.dropna(inplace=True)
+
+        """Подготовили аналоги, теперь из самых подходящих берем первые пять"""
+        df = df.head()
 
         # data["Количество комнат"] = data["Количество комнат"].str.extract('(\d+)')
         df["Этажность"] = df["Дом"].str.extract('(\/(?!\/)([0-9]+))')[1]
@@ -172,6 +190,25 @@ class PoolEstimate:
             0.09,
             -0.083,
             -0.55
+        ]
+        return np.select(cond_list, choice_list, default=0.0)
+
+    def calculate_repair_state_k(self, df: pd.DataFrame, etalon_repair_state):
+        cond_list = [
+            np.logical_and(df['Ремонт'].astype(int) == 0, etalon_repair_state == 1),
+            np.logical_and(df['Ремонт'].astype(int) == 0, etalon_repair_state == 2),
+            np.logical_and(df['Ремонт'].astype(int) == 1, etalon_repair_state == 0),
+            np.logical_and(df['Ремонт'].astype(int) == 1, etalon_repair_state == 2),
+            np.logical_and(df['Ремонт'].astype(int) == 2, etalon_repair_state == 0),
+            np.logical_and(df['Ремонт'].astype(int) == 2, etalon_repair_state == 1),
+        ]
+        choice_list = [
+            13400,
+            20100,
+            -13400,
+            6700,
+            -20100,
+            -6700
         ]
         return np.select(cond_list, choice_list, default=0.0)
 
@@ -311,9 +348,14 @@ class PoolEstimate:
             is_metro_stepway_cor=True,
             is_repair_state=True
     ):
-        etalon_xls = pd.ExcelFile(self.etalon)
+        etalon_xls = pd.ExcelFile(self.etalon, engine='openpyxl')
         df_etalon = pd.read_excel(etalon_xls, 0)
-        # df_etalon = df_etalon.dropna()
+        df_etalon = df_etalon.dropna()
+        df_etalon = df_etalon.iloc[-2:]
+        new_header = df_etalon.iloc[0]
+        df_etalon = df_etalon[1:]
+        df_etalon.columns = new_header
+
         floor = df_etalon.iloc[:, 5].values[-1]
         full_floor = df_etalon.iloc[:, 3].values[-1]
         etalon_floor_value = 0
@@ -329,6 +371,8 @@ class PoolEstimate:
         has_balcony = df_etalon.iloc[:, 8].values[-1] == 'Да'
         is_metro_stepway = df_etalon.iloc[:, 9].values[-1]
         repair_state = df_etalon.iloc[:, 10].values[-1]
+        repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
+            0 if repair_state.lower() == 'без отделки' else 2)
 
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
@@ -350,12 +394,20 @@ class PoolEstimate:
             df['БалконК'] = self.calculate_balcony_k(df, etalon_balcony=has_balcony)
         if is_kitchen_square_cor:
             df['КухняК'] = self.calculate_kitchen_k(df, etalon_kitchen_square=kitchen_squad)
+        if is_repair_state:
+            df['РемонтК'] = self.calculate_repair_state_k(df, repair_state)
 
-        df['Сумма за квадратный метр для эталона'] = df['Цена/м'].astype(float) * (
+        df['Итого сумма, кв метр'] = (df['Цена/м'].astype(float)) * (
                 1 + (df['ЭтажК'].astype(float) if is_floor_cor else 0)
                 + (df['ПлощадьК'].astype(float) if is_square_cor else 0)
                 + (df['БалконК'].astype(float) if is_balcony_cor else 0)
                 + (df['КухняК'].astype(float) if is_kitchen_square_cor else 0)
-                + auction_value)
+                + auction_value) + (df['РемонтК'] if is_repair_state else 0)
 
-        df.to_excel("output.xlsx")
+        etalon_price = df['Итого сумма, кв метр'].mean()
+        df_etalon["Цена, кв метр"] = etalon_price
+
+        writer = pd.ExcelWriter('output.xlsx', engine='openpyxl')
+        df_etalon.to_excel(writer, sheet_name='Эталон')
+        df.to_excel(writer, sheet_name='Аналоги')
+        writer.close()
