@@ -39,18 +39,15 @@ class PoolEstimate:
             self,
             df,
             etalon_square,
-            is_floor_cor=True,
-            is_square_cor=True,
-            is_kitchen_square_cor=True,
-            is_balcony_cor=True,
-            is_metro_stepway_cor=True,
-            is_repair_state=True):
+            kitchen_square_cor=None,
+            balcony_cor=None,
+            repair_state=None):
         """Подготовить данные с циана для корректировки, удаление неподходящих аналогов"""
         missing_df = self.missing_values_table(df)
         missing_columns = list(missing_df[missing_df['% of Total Values'] > 40].index)
-        if is_balcony_cor:
+        if balcony_cor:
             missing_columns.remove('Балкон')
-        if is_repair_state:
+        if repair_state:
             missing_columns.remove('Ремонт')
         missing_columns.append('Высота потолков, м')
         missing_columns.append('Тип')
@@ -60,7 +57,7 @@ class PoolEstimate:
         missing_columns.append('Описание')
         df = df.drop(columns=list(missing_columns))
 
-        if is_balcony_cor:
+        if balcony_cor:
             df['Балкон'] = np.where(df['Балкон'].isna(), 0, 1)
         df["Площадь"] = df["Площадь, м2"].str.split('/').str[0]
 
@@ -84,11 +81,11 @@ class PoolEstimate:
 
         df["Площадь"] = np.select(cond_list, choice_list, default=df['Площадь'])
 
-        if is_kitchen_square_cor:
+        if kitchen_square_cor:
             df["Площадь кухни"] = df["Площадь, м2"].str.split('/').str[2] if len(
                 df["Площадь, м2"].str.split('/')) > 2 else np.nan
 
-        if is_repair_state:
+        if repair_state:
             replacements = {
                 'Ремонт': {
                     'Без': 0,
@@ -340,13 +337,13 @@ class PoolEstimate:
     def calculate_cor(
             self,
             data: str,
-            is_auction_cor=True,
-            is_floor_cor=True,
-            is_square_cor=True,
-            is_kitchen_square_cor=True,
-            is_balcony_cor=True,
-            is_metro_stepway_cor=True,
-            is_repair_state=True
+            auction_cor=None,
+            floor_cor=None,
+            square_cor=None,
+            kitchen_square_cor=None,
+            balcony_cor=None,
+            metro_stepway_cor=None,
+            repair_state=None
     ):
         etalon_xls = pd.ExcelFile(self.etalon, engine='openpyxl')
         df_etalon = pd.read_excel(etalon_xls, 0)
@@ -365,44 +362,43 @@ class PoolEstimate:
         elif 1 < floor < full_floor:
             etalon_floor_value = 1
 
-        auction_value = -0.045 if is_auction_cor else 0
-        full_square = df_etalon.iloc[:, 6].values[-1]
-        kitchen_squad = df_etalon.iloc[:, 7].values[-1]
-        has_balcony = df_etalon.iloc[:, 8].values[-1] == 'Да'
-        is_metro_stepway = df_etalon.iloc[:, 9].values[-1]
-        repair_state = df_etalon.iloc[:, 10].values[-1]
-        repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
+        auction_value = -0.045 if auction_cor else 0
+        # full_square = df_etalon.iloc[:, 6].values[-1]
+        # kitchen_squad = df_etalon.iloc[:, 7].values[-1]
+        # has_balcony = df_etalon.iloc[:, 8].values[-1] == 'Да'
+        # is_metro_stepway = df_etalon.iloc[:, 9].values[-1]
+        # repair_state = df_etalon.iloc[:, 10].values[-1]
+
+        if repair_state:
+            repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
             0 if repair_state.lower() == 'без отделки' else 2)
 
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
             df,
-            etalon_square=full_square,
-            is_floor_cor=is_floor_cor,
-            is_square_cor=is_square_cor,
-            is_kitchen_square_cor=is_kitchen_square_cor,
-            is_balcony_cor=is_balcony_cor,
-            is_metro_stepway_cor=is_metro_stepway_cor,
-            is_repair_state=is_repair_state
+            etalon_square=square_cor,
+            kitchen_square_cor=kitchen_square_cor,
+            balcony_cor=balcony_cor,
+            repair_state=repair_state
         )
 
-        if is_floor_cor:
+        if floor_cor:
             df['ЭтажК'] = self.calculate_floor_k(df, etalon_floor_value)
-        if is_square_cor:
-            df['ПлощадьК'] = self.calculate_square_k(df, full_square)
-        if is_balcony_cor:
-            df['БалконК'] = self.calculate_balcony_k(df, etalon_balcony=has_balcony)
-        if is_kitchen_square_cor:
-            df['КухняК'] = self.calculate_kitchen_k(df, etalon_kitchen_square=kitchen_squad)
-        if is_repair_state:
+        if square_cor:
+            df['ПлощадьК'] = self.calculate_square_k(df, square_cor)
+        if balcony_cor:
+            df['БалконК'] = self.calculate_balcony_k(df, etalon_balcony=balcony_cor)
+        if kitchen_square_cor:
+            df['КухняК'] = self.calculate_kitchen_k(df, etalon_kitchen_square=kitchen_square_cor)
+        if repair_state:
             df['РемонтК'] = self.calculate_repair_state_k(df, repair_state)
 
         df['Итого сумма, кв метр'] = (df['Цена/м'].astype(float)) * (
-                1 + (df['ЭтажК'].astype(float) if is_floor_cor else 0)
-                + (df['ПлощадьК'].astype(float) if is_square_cor else 0)
-                + (df['БалконК'].astype(float) if is_balcony_cor else 0)
-                + (df['КухняК'].astype(float) if is_kitchen_square_cor else 0)
-                + auction_value) + (df['РемонтК'] if is_repair_state else 0)
+                1 + (df['ЭтажК'].astype(float) if floor_cor else 0)
+                + (df['ПлощадьК'].astype(float) if square_cor else 0)
+                + (df['БалконК'].astype(float) if balcony_cor else 0)
+                + (df['КухняК'].astype(float) if kitchen_square_cor else 0)
+                + auction_value) + (df['РемонтК'] if repair_state else 0)
 
         etalon_price = df['Итого сумма, кв метр'].mean()
         df_etalon["Цена, кв метр"] = etalon_price
