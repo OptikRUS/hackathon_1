@@ -447,3 +447,6 @@ class PoolEstimate:
         df_etalon.to_excel(writer, sheet_name='Эталон')
         df.to_excel(writer, sheet_name='Аналоги')
         writer.close()
+        # result_df = pd.ExcelFile('output.xlsx', engine='openpyxl')
+
+        return [df.to_json(orient="records"), df_etalon.to_json(orient="records")]
