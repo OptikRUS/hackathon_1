@@ -8,6 +8,7 @@ class CianParser:
         'engine_version': '2',
         'offer_type': 'flat',
         'origin': 'map',
+        'minfloorn': '1',
     }
 
     headers = {
@@ -50,10 +51,14 @@ class CianParser:
                       'Chrome/107.0.0.0 Safari/537.36',
     }
 
-    def __init__(self, bbox, room_type='1'):
+    def __init__(self, bbox, floor, min_year, max_year, house_material_type='1', room_type='1'):
         self.url = 'https://www.cian.ru/export/xls/offers/'
         self.params["bbox"] = bbox
         self.params[f"room{room_type}"] = '1'
+        self.params["house_material%5B6%5D"] = house_material_type
+        self.params["maxfloorn"] = floor
+        self.params["min_house_year"] = min_year
+        self.params["max_house_year"] = max_year
 
     @property
     def get_doc(self):
