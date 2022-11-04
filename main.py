@@ -13,6 +13,6 @@ app = FastAPI()
 async def get_xlsx_table(region: str, etalon: UploadFile = File(...)):
     response = CianParser(region)
     estimation = PoolEstimate(etalon.file._file)
-    return estimation.calculateCor(response.get_doc)
+    return estimation.calculate_cor(response.get_doc)
     # return StreamingResponse(io.BytesIO(response.get_doc),
     #                          media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
