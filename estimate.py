@@ -107,7 +107,7 @@ class PoolEstimate:
 
         df["Материал"] = df["Дом"].str.extract('([ЁёА-я]+)')
 
-        df["Год"] = df["Название ЖК"].str.extract('(\d{4})')
+        # df["Год"] = df["Название ЖК"].str.extract('(\d{4})')
 
         replacements = {
             'Материал': {
