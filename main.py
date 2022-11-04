@@ -10,8 +10,8 @@ app = FastAPI()
 
 
 @app.post("/")
-async def get_xlsx_table(region: str, etalon: UploadFile = File(...)):
-    response = CianParser(region)
+async def get_xlsx_table(bbox: str, room_type: str, etalon: UploadFile = File(...)):
+    response = CianParser(bbox, room_type)
     estimation = PoolEstimate(etalon.file._file)
     return estimation.calculate_cor(response.get_doc)
     # return StreamingResponse(io.BytesIO(response.get_doc),
