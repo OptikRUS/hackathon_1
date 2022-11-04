@@ -18,14 +18,17 @@ async def get_xlsx_table(bbox: str,
                          max_year: str,
                          pool: UploadFile = File(...),
                          ):
+
     """
-    bbox: регион прямоуголника\n
-    room_type: количество комнат\n
-    house_material_type: материал дома\n
-    floor: этажность\n
-    min_year: мин год постройки\n
-    max_year: макс год постройки\n
-    pool: файл пула\n
+    **Параметры для CIAN:**\n
+    `bbox:` регион прямоуголника\n
+    `room_type:` количество комнат\n
+    `house_material_type:` материал дома\n
+    `floor:` этажность\n
+    `min_year:` мин год постройки\n
+    `max_year:` макс год постройки\n
+
+    `pool:` файл пула\n
     """
     response = CianParser(bbox=bbox,
                           room_type=room_type,
