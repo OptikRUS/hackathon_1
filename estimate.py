@@ -334,9 +334,18 @@ class PoolEstimate:
         ]
         return np.select(condlist, choicelist, default=0.0)
 
+    """
+        max_floor - Этажность
+    """
+
     def calculate_cor(
             self,
             data: str,
+            address="",
+            room_count=0,
+            material="",
+            segment="",
+            max_floor=0,
             auction_cor=None,
             floor_cor=None,
             square_cor=None,
@@ -345,22 +354,23 @@ class PoolEstimate:
             metro_stepway_cor=None,
             repair_state=None
     ):
-        etalon_xls = pd.ExcelFile(self.etalon, engine='openpyxl')
-        df_etalon = pd.read_excel(etalon_xls, 0)
-        df_etalon = df_etalon.dropna()
-        df_etalon = df_etalon.iloc[-2:]
-        new_header = df_etalon.iloc[0]
-        df_etalon = df_etalon[1:]
-        df_etalon.columns = new_header
+        # etalon_xls = pd.ExcelFile(self.etalon, engine='openpyxl')
+        # df_etalon = pd.read_excel(etalon_xls, 0)
+        # df_etalon = df_etalon.dropna()
+        # df_etalon = df_etalon.iloc[-2:]
+        # new_header = df_etalon.iloc[0]
+        # df_etalon = df_etalon[1:]
+        # df_etalon.columns = new_header
 
-        floor = df_etalon.iloc[:, 5].values[-1]
-        full_floor = df_etalon.iloc[:, 3].values[-1]
+        # floor = df_etalon.iloc[:, 5].values[-1]
+        # full_floor = df_etalon.iloc[:, 3].values[-1]
         etalon_floor_value = 0
 
-        if floor == full_floor:
-            etalon_floor_value = 2
-        elif 1 < floor < full_floor:
-            etalon_floor_value = 1
+        if floor_cor:
+            if floor_cor == max_floor:
+                etalon_floor_value = 2
+            elif 1 < floor_cor < max_floor:
+                etalon_floor_value = 1
 
         auction_value = -0.045 if auction_cor else 0
         # full_square = df_etalon.iloc[:, 6].values[-1]
@@ -371,7 +381,7 @@ class PoolEstimate:
 
         if repair_state:
             repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
-            0 if repair_state.lower() == 'без отделки' else 2)
+                0 if repair_state.lower() == 'без отделки' else 2)
 
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
@@ -401,8 +411,38 @@ class PoolEstimate:
                 + auction_value) + (df['РемонтК'] if repair_state else 0)
 
         etalon_price = df['Итого сумма, кв метр'].mean()
-        df_etalon["Цена, кв метр"] = etalon_price
 
+        # df_etalon["Цена, кв метр"] = etalon_price
+
+        dict_etalon = {"row_1": [address,
+                                 room_count,
+                                 segment,
+                                 max_floor,
+                                 material,
+                                 floor_cor,
+                                 square_cor,
+                                 kitchen_square_cor,
+                                 balcony_cor,
+                                 metro_stepway_cor,
+                                 repair_state,
+                                 etalon_price]}
+        df_etalon = pd.DataFrame.from_dict(dict_etalon, orient='index')
+
+        columns = [
+            'Местоположение',
+            'Количество комнат',
+            'Сегмент(Новостройка, современное жилье, старый жилой фонд)',
+            'Этажность дома',
+            "Материал стен(Кипич, панель, монолит)",
+            "Этаж расположения",
+            "Площадь квартиры, кв.м",
+            "Площадь кухни, кв.м",
+            "Наличие балкона / лоджии",
+            "Удаленность от станции метро, мин.пешком",
+            "Состояние(без отделки, муниципальный ремонт, с современная отделка)",
+            "Цена за кв метр"
+        ]
+        df_etalon.columns = columns
         writer = pd.ExcelWriter('output.xlsx', engine='openpyxl')
         df_etalon.to_excel(writer, sheet_name='Эталон')
         df.to_excel(writer, sheet_name='Аналоги')
