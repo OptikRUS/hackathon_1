@@ -13,7 +13,6 @@ async def get_xlsx_table(bbox: str,
                          floor: str,
                          min_year: str,
                          max_year: str,
-                         # pool: UploadFile = File(...),
                          address: str,
                          segment: str,
                          auction_cor: bool = None,
@@ -23,6 +22,7 @@ async def get_xlsx_table(bbox: str,
                          balcony_cor: str = None,
                          metro_stepway_cor: str = None,
                          repair_state: str = None,
+                         pool: UploadFile = File(...),
                          ):
 
     """
