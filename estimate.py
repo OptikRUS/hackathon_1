@@ -28,7 +28,8 @@ class PoolEstimate:
 
         # Print some summary information
         print("Your selected dataframe has " + str(df.shape[1]) + " columns.\n"
-                                                                  "There are " + str(mis_val_table_ren_columns.shape[0]) +
+                                                                  "There are " + str(
+            mis_val_table_ren_columns.shape[0]) +
               " columns that have missing values.")
 
         # Return the dataframe with missing information
@@ -130,7 +131,7 @@ class PoolEstimate:
         ]
         return np.select(cond_list, choice_list, default=0.0)
 
-    def calculate_balcony_k(df: pd.DataFrame, etalon_balcony: bool):
+    def calculate_balcony_k(self, df: pd.DataFrame, etalon_balcony: bool):
         condlist = [
             np.logical_and(df['Балкон'].astype(int) == 1, not etalon_balcony),
             np.logical_and(df['Балкон'].astype(int) == 0, etalon_balcony)
@@ -260,16 +261,10 @@ class PoolEstimate:
         )
 
         df['ЭтажК'] = self.calculate_floor_k(df, etalon_floor_value) if is_floor_cor else 0
-        df['ПлощадьК'] = self.calculate_square_k(df, full_square) if isSquareCor else 0
-        df['БалконК'] = calculateBalconyK(df, etalon_balcony=hasBalcony)
+        df['ПлощадьК'] = self.calculate_square_k(df, full_square) if is_square_cor else 0
+        df['БалконК'] = self.calculate_balcony_k(df, etalon_balcony=hasBalcony) if is_balcony_cor else 0
 
         df['Сумма за квадратный метр для эталона'] = df['Цена/м'].astype(float) * (
-                    1 + df['ЭтажК'].astype(float) + df['ПлощадьК'].astype(float) + auctionValue)
+                1 + df['ЭтажК'].astype(float) + df['ПлощадьК'].astype(float) + auctionValue)
 
-        # fCond = -7.0 if (df['Этаж'] < df['Этажность'] and df['Этаж'] > 1 and etalon_floor_value == 0) else 0.0 + \
-        #         -4.0 if (df['Этаж'] < df['Этажность'] and df['Этаж'] > 1 and etalon_floor_value == 2) else 0.0 + \
-        #          7.5 if (df['Этаж'] == 1 and etalon_floor_value == 1) else 0.0 + \
-        #             3.2 if (df['Этаж'] == 1 and etalon_floor_value == 2) else 0.0 + \
-        #             -3.1 if (df['Этаж'] == df['Этажность'] and etalon_floor_value == 0) else 0.0 + \
-        #             4.2 if (df['Этаж'] == df['Этажность'] and etalon_floor_value == 1) else 0.0
         df.to_excel("output.xlsx")
