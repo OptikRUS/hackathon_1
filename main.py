@@ -7,24 +7,24 @@ app = FastAPI()
 
 
 @app.post("/")
-async def get_xlsx_table(bbox: str,
-                         room_type: str,
-                         house_material_type: str,
-                         floor: str,
-                         min_year: str,
-                         max_year: str,
-                         address: str,
-                         segment: str,
-                         auction_cor: bool = None,
-                         floor_cor: str = None,
-                         square_cor: str = None,
-                         kitchen_square_cor: str = None,
-                         balcony_cor: str = None,
-                         metro_stepway_cor: str = None,
-                         repair_state: str = None,
-                         pool: UploadFile = File(...),
-                         ):
-
+async def get_xlsx_table(
+        bbox: str,
+        room_type: str,
+        house_material_type: str,
+        floor: str,
+        min_year: str,
+        max_year: str,
+        address: str,
+        segment: str,
+        auction_cor: bool = None,
+        floor_cor: str = None,
+        square_cor: str = None,
+        kitchen_square_cor: str = None,
+        balcony_cor: str = None,
+        metro_stepway_cor: str = None,
+        repair_state: str = None,
+        pool: UploadFile = File(...),
+):
     """
     # Параметры для CIAN:\n
     `bbox:` регион прямоуголника\n
