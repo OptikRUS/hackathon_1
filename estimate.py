@@ -61,27 +61,29 @@ class PoolEstimate:
 
         if balcony_cor:
             df['Балкон'] = np.where(df['Балкон'].isna(), 0, 1)
-        df["Площадь"] = df["Площадь, м2"].str.split('/').str[0]
 
-        """Удаление неподходящих аналогов по квадратуре"""
-        cond_list = [
-            np.logical_and(df['Площадь'].astype(float) > 65, etalon_square < 30),
-            np.logical_and(df['Площадь'].astype(float) > 90, etalon_square <= 50),
-            np.logical_and(df['Площадь'].astype(float) > 120, etalon_square <= 65),
-            np.logical_and(df['Площадь'].astype(float) < 30, etalon_square > 65),
-            np.logical_and(df['Площадь'].astype(float) <= 50, etalon_square > 90),
-            np.logical_and(df['Площадь'].astype(float) <= 65, etalon_square > 120),
-        ]
-        choice_list = [
-            np.nan,
-            np.nan,
-            np.nan,
-            np.nan,
-            np.nan,
-            np.nan
-        ]
+        if etalon_square:
+            df["Площадь"] = df["Площадь, м2"].str.split('/').str[0]
 
-        df["Площадь"] = np.select(cond_list, choice_list, default=df['Площадь'])
+            """Удаление неподходящих аналогов по квадратуре"""
+            cond_list = [
+                np.logical_and(df['Площадь'].astype(float) > 65, etalon_square < 30),
+                np.logical_and(df['Площадь'].astype(float) > 90, etalon_square <= 50),
+                np.logical_and(df['Площадь'].astype(float) > 120, etalon_square <= 65),
+                np.logical_and(df['Площадь'].astype(float) < 30, etalon_square > 65),
+                np.logical_and(df['Площадь'].astype(float) <= 50, etalon_square > 90),
+                np.logical_and(df['Площадь'].astype(float) <= 65, etalon_square > 120),
+            ]
+            choice_list = [
+                np.nan,
+                np.nan,
+                np.nan,
+                np.nan,
+                np.nan,
+                np.nan
+            ]
+
+            df["Площадь"] = np.select(cond_list, choice_list, default=df['Площадь'])
 
         if kitchen_square_cor:
             df["Площадь кухни"] = df["Площадь, м2"].str.split('/').str[2] if len(
