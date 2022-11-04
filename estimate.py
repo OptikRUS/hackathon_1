@@ -340,13 +340,13 @@ class PoolEstimate:
     def calculate_cor(
             self,
             data: str,
-            is_auction_cor=True,
-            is_floor_cor=True,
-            is_square_cor=True,
-            is_kitchen_square_cor=True,
-            is_balcony_cor=True,
-            is_metro_stepway_cor=True,
-            is_repair_state=True
+            is_auction_cor=None,
+            is_floor_cor=None,
+            is_square_cor=None,
+            is_kitchen_square_cor=None,
+            is_balcony_cor=None,
+            is_metro_stepway_cor=None,
+            is_repair_state=None
     ):
         etalon_xls = pd.ExcelFile(self.etalon, engine='openpyxl')
         df_etalon = pd.read_excel(etalon_xls, 0)
