@@ -120,7 +120,7 @@ class PoolEstimate:
 
         df.replace(replacements, inplace=True, regex=True)
 
-        df["Цена/м"] = df['Цена'].str.extract('([0-9]+)')[0].astype(float) / df[kitchen_square_column_name].astype(
+        df["Цена/м"] = df['Цена'].str.extract('([0-9]+)')[0].astype(float) / df[square_table_name].astype(
             float)
 
         return df
