@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from parser_class import CianParser
 from estimate import PoolEstimate
+from fake_db import db
 
 app = FastAPI()
 
@@ -25,23 +26,22 @@ async def main():
 
 
 @app.post("/")
-async def get_xlsx_table(
+async def get_etalon_and_analog(
         bbox: str,
         room_type: str,
         house_material_type: str,
-        floor: str,
+        floor: int,
         min_year: str,
         max_year: str,
         address: str,
         segment: str,
         auction_cor: bool = None,
-        floor_cor: str = None,
-        square_cor: str = None,
-        kitchen_square_cor: str = None,
-        balcony_cor: str = None,
+        floor_cor: int = None,
+        square_cor: float = None,
+        kitchen_square_cor: float = None,
+        balcony_cor: bool = None,
         metro_stepway_cor: str = None,
         repair_state: str = None,
-        pool: UploadFile = File(...),
 ):
     """
     # Параметры для CIAN:\n
@@ -52,7 +52,6 @@ async def get_xlsx_table(
     `min_year:` мин год постройки\n
     `max_year:` макс год постройки\n
 
-    `pool:` файл пула\n
     <br>
     # Корректировка аналога:\n
     `address:` адрес\n
@@ -73,8 +72,10 @@ async def get_xlsx_table(
                           max_year=max_year
                           )
 
-    estimation = PoolEstimate(data=response.get_doc)
-    return estimation.calculate_cor(
+    estimation = PoolEstimate()
+
+    etalon, analog = estimation.calculate_cor(
+        data=response.get_doc,
         address=address,
         room_count=room_type,
         material=house_material_type,
@@ -88,3 +89,16 @@ async def get_xlsx_table(
         metro_stepway_cor=metro_stepway_cor,
         repair_state=repair_state
     )
+
+    db.update({"etalon": etalon})
+
+    return {"etalon": etalon, "analog": analog}
+
+
+@app.post("/etalon")
+async def pool_estimate(pool: UploadFile = File(...)):
+    """
+    `pool:` файл пула\n
+    """
+    estimation = PoolEstimate()
+    return estimation.calculate_pull(pull=pool.file._file, etalon_json=db["etalon"])
