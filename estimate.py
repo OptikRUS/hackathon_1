@@ -41,7 +41,7 @@ class PoolEstimate:
     def make_data_ready_for_work(
             self,
             df,
-            etalon_square,
+            etalon_square=None,
             kitchen_square_cor=None,
             balcony_cor=None,
             repair_state=None):
