@@ -25,7 +25,7 @@ async def main():
     return {"message": "Hello World"}
 
 
-@app.post("/")
+@app.get("/")
 async def get_etalon_and_analog(
         bbox: str,
         room_type: str,
