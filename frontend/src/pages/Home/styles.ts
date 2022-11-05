@@ -1,10 +1,13 @@
 export const createStyle = () => ({
-    root: {
+    root: {},
+
+    fieldsWrapper: {
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
         gap: '40px',
         px: '30px'
     },
+
     requiredFields: {
         display: 'flex',
         flexDirection: 'column',
