@@ -2,7 +2,8 @@ version: "3.11"
 
 services:
   # application service
-  file-service:
+  backend:
+    container_name: backend
     build: .
     command: uvicorn main:app --host 0.0.0.0
     ports:
