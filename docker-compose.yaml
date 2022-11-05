@@ -1,9 +1,22 @@
 version: "3.11"
 
 services:
-# application service
+  # application service
   file-service:
     build: .
     command: uvicorn main:app --host 0.0.0.0
     ports:
       - "8000:8000"
+
+  frontend:
+    container_name: frontend
+    image: node:latest
+    working_dir: "/app/"
+    volumes:
+      - './frontend:/app'
+    ports:
+      - "3000:3000"
+    command: sh -c "
+      npm install &&
+      npm start
+      "

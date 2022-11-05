@@ -1,9 +1,27 @@
 from fastapi import FastAPI, UploadFile, File
+from fastapi.middleware.cors import CORSMiddleware
 
 from parser_class import CianParser
 from estimate import PoolEstimate
 
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/hello")
+async def main():
+    return {"message": "Hello World"}
 
 
 @app.post("/")
@@ -24,7 +42,6 @@ async def get_xlsx_table(bbox: str,
                          repair_state: str = None,
                          pool: UploadFile = File(...),
                          ):
-
     """
     # Параметры для CIAN:\n
     `bbox:` регион прямоуголника\n
