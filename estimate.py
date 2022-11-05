@@ -389,7 +389,7 @@ class PoolEstimate:
             floor_cor=None,
             square_cor=None,
             kitchen_square_cor=None,
-            balcony_cor=None,
+            balcony_cor=False,
             metro_stepway_cor=None,
             repair_state=None
     ):
@@ -400,6 +400,11 @@ class PoolEstimate:
                 etalon_floor_value = 2
             elif 1 < floor_cor < max_floor:
                 etalon_floor_value = 1
+
+        has_balcony = 0
+
+        if balcony_cor:
+            has_balcony = 1
 
         auction_value = -0.045 if auction_cor else 0
 
@@ -412,7 +417,7 @@ class PoolEstimate:
             df,
             etalon_square=square_cor,
             kitchen_square_cor=kitchen_square_cor,
-            balcony_cor=balcony_cor,
+            balcony_cor=has_balcony,
             repair_state=repair_state
         )
 
@@ -421,7 +426,7 @@ class PoolEstimate:
         if square_cor:
             df['ПлощадьК'] = self.calculate_square_k(df, square_cor)
         if balcony_cor:
-            df['БалконК'] = self.calculate_balcony_k(df, etalon_balcony=balcony_cor)
+            df['БалконК'] = self.calculate_balcony_k(df, etalon_balcony=has_balcony)
         if kitchen_square_cor:
             df['КухняК'] = self.calculate_kitchen_k(df, etalon_kitchen_square=kitchen_square_cor)
         if repair_state:
@@ -471,9 +476,11 @@ class PoolEstimate:
         df_etalon.to_excel(writer, sheet_name='Эталон')
         df.to_excel(writer, sheet_name='Аналоги')
         writer.close()
+
+        etalon_json = df_etalon.to_json(orient="records")
         # result_df = pd.ExcelFile('output.xlsx', engine='openpyxl')
 
-        return [df_etalon.to_json(orient="records"), df.to_json(orient="records")]
+        return [etalon_json, df.to_json(orient="records")]
 
     """
     pull - загруженный пользователем файл для расчета  
@@ -482,6 +489,7 @@ class PoolEstimate:
     def calculate_pull(
             self,
             pull: io,
+            etalon_json,
             address="qwe",
             room_count=2,
             material="2",
@@ -492,11 +500,13 @@ class PoolEstimate:
             floor_cor=14,
             square_cor=70.8,
             kitchen_square_cor=12.7,
-            balcony_cor=1,
+            balcony_cor=False,
             metro_stepway_cor=11,
             repair_state='муниципальный ремонт'
     ):
         etalon_floor_value = 0
+
+        # etalon_df = pd.read_json()
 
         if floor_cor:
             if floor_cor == max_floor:
@@ -505,6 +515,10 @@ class PoolEstimate:
                 etalon_floor_value = 1
 
         auction_value = -0.045 if auction_cor else 0
+
+        has_balkony = 0
+        if has_balkony:
+            has_balkony = 1
 
         if repair_state:
             repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
@@ -526,7 +540,7 @@ class PoolEstimate:
         if square_cor:
             pull_df['ПлощадьК'] = self.calculate_square_k(pull_df, square_cor)
         if balcony_cor:
-            pull_df['БалконК'] = self.calculate_balcony_k(pull_df, etalon_balcony=balcony_cor)
+            pull_df['БалконК'] = self.calculate_balcony_k(pull_df, etalon_balcony=has_balkony)
         if kitchen_square_cor:
             pull_df['КухняК'] = self.calculate_kitchen_k(pull_df, etalon_kitchen_square=kitchen_square_cor)
         if repair_state:
@@ -535,7 +549,7 @@ class PoolEstimate:
         pull_df['Итого сумма, кв метр'] = (etalon_price) * (
                 1 + (pull_df['ЭтажК'].astype(float) if floor_cor else 0)
                 + (pull_df['ПлощадьК'].astype(float) if square_cor else 0)
-                + (pull_df['БалконК'].astype(float) if balcony_cor else 0)
+                + (pull_df['БалконК'].astype(float) if has_balkony else 0)
                 + (pull_df['КухняК'].astype(float) if kitchen_square_cor else 0)
                 + auction_value) + (pull_df['РемонтК'] if repair_state else 0)
 
