@@ -489,7 +489,6 @@ class PoolEstimate:
     def calculate_pull(
             self,
             pull: io,
-            etalon_json,
             address="qwe",
             room_count=2,
             material="2",
