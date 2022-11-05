@@ -54,7 +54,7 @@ class PoolEstimate:
             missing_columns.remove('Ремонт')
         missing_columns.append('Высота потолков, м')
         missing_columns.append('Тип')
-        missing_columns.append('Название ЖК')
+        # missing_columns.append('Название ЖК')
         missing_columns.append('Окна')
         missing_columns.append('Количество комнат')
         missing_columns.append('Описание')
