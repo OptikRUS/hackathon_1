@@ -1,3 +1,4 @@
+import io
 from io import BytesIO
 
 import pandas as pd
@@ -62,17 +63,18 @@ class PoolEstimate:
         if balcony_cor:
             df['Балкон'] = np.where(df['Балкон'].isna(), 0, 1)
 
-        if etalon_square:
-            df["Площадь"] = df["Площадь, м2"].str.split('/').str[0]
+        square_table_name = 'Площадь квартиры, кв.м'
+        df[square_table_name] = df["Площадь, м2"].str.split('/').str[0]
 
-            """Удаление неподходящих аналогов по квадратуре"""
+        """Удаление неподходящих аналогов по квадратуре"""
+        if etalon_square:
             cond_list = [
-                np.logical_and(df['Площадь'].astype(float) > 65, etalon_square < 30),
-                np.logical_and(df['Площадь'].astype(float) > 90, etalon_square <= 50),
-                np.logical_and(df['Площадь'].astype(float) > 120, etalon_square <= 65),
-                np.logical_and(df['Площадь'].astype(float) < 30, etalon_square > 65),
-                np.logical_and(df['Площадь'].astype(float) <= 50, etalon_square > 90),
-                np.logical_and(df['Площадь'].astype(float) <= 65, etalon_square > 120),
+                np.logical_and(df[square_table_name].astype(float) > 65, etalon_square < 30),
+                np.logical_and(df[square_table_name].astype(float) > 90, etalon_square <= 50),
+                np.logical_and(df[square_table_name].astype(float) > 120, etalon_square <= 65),
+                np.logical_and(df[square_table_name].astype(float) < 30, etalon_square > 65),
+                np.logical_and(df[square_table_name].astype(float) <= 50, etalon_square > 90),
+                np.logical_and(df[square_table_name].astype(float) <= 65, etalon_square > 120),
             ]
             choice_list = [
                 np.nan,
@@ -83,10 +85,11 @@ class PoolEstimate:
                 np.nan
             ]
 
-            df["Площадь"] = np.select(cond_list, choice_list, default=df['Площадь'])
+            df[square_table_name] = np.select(cond_list, choice_list, default=df[square_table_name])
 
+        kitchen_square_column_name = 'Площадь кухни, кв.м'
         if kitchen_square_cor:
-            df["Площадь кухни"] = df["Площадь, м2"].str.split('/').str[2] if len(
+            df[kitchen_square_column_name] = df["Площадь, м2"].str.split('/').str[2] if len(
                 df["Площадь, м2"].str.split('/')) > 2 else np.nan
 
         if repair_state:
@@ -97,21 +100,15 @@ class PoolEstimate:
                     'Евро|Диза': 2,
                 }
             }
+
             df.replace(replacements, inplace=True, regex=True)
             df['Ремонт'] = np.where(df['Ремонт'].isna(), 0, df['Ремонт'])
-
         df.dropna(inplace=True)
-
-        """Подготовили аналоги, теперь из самых подходящих берем первые пять"""
         df = df.head()
-
-        # data["Количество комнат"] = data["Количество комнат"].str.extract('(\d+)')
-        df["Этажность"] = df["Дом"].str.extract('(\/(?!\/)([0-9]+))')[1]
-        df["Этаж"] = df["Дом"].str.extract('([0-9]+)')[0]
+        df['Этажность дома'] = df["Дом"].str.extract('(\/(?!\/)([0-9]+))')[1]
+        df["Этаж расположения"] = df["Дом"].str.extract('([0-9]+)')[0]
 
         df["Материал"] = df["Дом"].str.extract('([ЁёА-я]+)')
-
-        # df["Год"] = df["Название ЖК"].str.extract('(\d{4})')
 
         replacements = {
             'Материал': {
@@ -123,23 +120,57 @@ class PoolEstimate:
 
         df.replace(replacements, inplace=True, regex=True)
 
-        df["Цена/м"] = df['Цена'].str.extract('([0-9]+)')[0].astype(float) / df['Площадь'].astype(float)
+        df["Цена/м"] = df['Цена'].str.extract('([0-9]+)')[0].astype(float) / df[kitchen_square_column_name].astype(
+            float)
 
+        return df
+
+    def make_pull_data_ready_for_work(
+            self,
+            df):
+        df['Балкон'] = np.where(df['Балкон'].str.contains('Нет', case=False), 0, 1)
+
+        replacements = {
+            'Ремонт': {
+                'без|Без': 0,
+                'муниц|Муниц': 1,
+                'совр|Совр': 2,
+            }
+        }
+
+        df.replace(replacements, inplace=True, regex=True)
+        df['Ремонт'] = np.where(df['Ремонт'].isna(), 0, df['Ремонт'])
+
+        df.dropna(inplace=True)
+
+        replacements = {
+            'Материал стен': {
+                'Монолит': 0,
+                'Кирп': 1,
+                'Панел': 2,
+            }
+        }
+
+        df.replace(replacements, inplace=True, regex=True)
         return df
 
     def calculate_floor_k(self, df: pd.DataFrame, etalon_floor_value):
         """Рассчитать коэффициент этажности"""
+        max_floor_column_name = 'Этажность дома'
+        floor_column_name = 'Этаж расположения'
         cond_list = [
             np.logical_and(
-                np.logical_and(df['Этаж'].astype(int) > 1, df['Этаж'].astype(int) < df['Этажность'].astype(int)),
+                np.logical_and(df[floor_column_name].astype(int) > 1,
+                               df[floor_column_name].astype(int) < df[max_floor_column_name].astype(int)),
                 etalon_floor_value == 0),
             np.logical_and(
-                np.logical_and(df['Этаж'].astype(int) > 1, df['Этаж'].astype(int) < df['Этажность'].astype(int)),
+                np.logical_and(df[floor_column_name].astype(int) > 1,
+                               df[floor_column_name].astype(int) < df[max_floor_column_name].astype(int)),
                 etalon_floor_value == 2),
-            np.logical_and(df['Этаж'] == 1, etalon_floor_value == 1),
-            np.logical_and(df['Этаж'] == 1, etalon_floor_value == 2),
-            np.logical_and(df['Этаж'] == df['Этажность'], etalon_floor_value == 0),
-            np.logical_and(df['Этаж'] == df['Этажность'], etalon_floor_value == 1),
+            np.logical_and(df[floor_column_name] == 1, etalon_floor_value == 1),
+            np.logical_and(df[floor_column_name] == 1, etalon_floor_value == 2),
+            np.logical_and(df[floor_column_name] == df[max_floor_column_name], etalon_floor_value == 0),
+            np.logical_and(df[floor_column_name] == df[max_floor_column_name], etalon_floor_value == 1),
         ]
         choice_list = [
             -0.07,
@@ -151,11 +182,12 @@ class PoolEstimate:
         ]
         return np.select(cond_list, choice_list, default=0.0)
 
-    def calculate_balcony_k(self, df: pd.DataFrame, etalon_balcony: bool):
+
+    def calculate_balcony_k(self, df: pd.DataFrame, etalon_balcony: int):
         """Рассчитать коэффициент по наличию балкона"""
         condlist = [
-            np.logical_and(df['Балкон'].astype(int) == 1, not etalon_balcony),
-            np.logical_and(df['Балкон'].astype(int) == 0, etalon_balcony)
+            np.logical_and(df['Балкон'].astype(int) == 1, etalon_balcony == 0),
+            np.logical_and(df['Балкон'].astype(int) == 0, etalon_balcony == 1)
         ]
         choicelist = [
             -0.05,
@@ -164,24 +196,27 @@ class PoolEstimate:
         return np.select(condlist, choicelist, default=0.0)
 
     def calculate_kitchen_k(self, df: pd.DataFrame, etalon_kitchen_square):
+        kitchen_square_column_name = 'Площадь кухни, кв.м'
         cond_list = [
             np.logical_and(
-                np.logical_and(df['Площадь кухни'].astype(float) >= 7, df['Площадь кухни'].astype(float) < 10),
+                np.logical_and(df[kitchen_square_column_name].astype(float) >= 7,
+                               df[kitchen_square_column_name].astype(float) < 10),
                 etalon_kitchen_square < 7),
             np.logical_and(
-                np.logical_and(df['Площадь кухни'].astype(float) >= 7, df['Площадь кухни'].astype(float) < 10),
+                np.logical_and(df[kitchen_square_column_name].astype(float) >= 7,
+                               df[kitchen_square_column_name].astype(float) < 10),
                 etalon_kitchen_square >= 10),
             np.logical_and(
-                df['Площадь кухни'].astype(float) < 7,
+                df[kitchen_square_column_name].astype(float) < 7,
                 np.logical_and(etalon_kitchen_square >= 7, etalon_kitchen_square < 10)),
             np.logical_and(
-                df['Площадь кухни'].astype(float) < 7,
+                df[kitchen_square_column_name].astype(float) < 7,
                 etalon_kitchen_square >= 10),
             np.logical_and(
-                df['Площадь кухни'].astype(float) >= 10,
+                df[kitchen_square_column_name].astype(float) >= 10,
                 etalon_kitchen_square < 7),
             np.logical_and(
-                df['Площадь кухни'].astype(float) >= 10,
+                df[kitchen_square_column_name].astype(float) >= 10,
                 np.logical_and(etalon_kitchen_square >= 7, etalon_kitchen_square < 10)),
         ]
         choice_list = [
@@ -214,94 +249,95 @@ class PoolEstimate:
         return np.select(cond_list, choice_list, default=0.0)
 
     def calculate_square_k(self, df: pd.DataFrame, full_square):
+        table_name = 'Площадь квартиры, кв.м'
         condlist = [
-            np.logical_and(df['Площадь'].astype(float) < 30, np.logical_and(full_square >= 30, full_square < 50)),
+            np.logical_and(df[table_name].astype(float) < 30, np.logical_and(full_square >= 30, full_square < 50)),
             np.logical_and(
-                df['Площадь'].astype(float) < 30,
+                df[table_name].astype(float) < 30,
                 np.logical_and(full_square >= 50, full_square < 65)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 30, df['Площадь'].astype(float) < 50),
+                np.logical_and(df[table_name].astype(float) >= 30, df[table_name].astype(float) < 50),
                 full_square < 30),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 30, df['Площадь'].astype(float) < 50),
+                np.logical_and(df[table_name].astype(float) >= 30, df[table_name].astype(float) < 50),
                 np.logical_and(full_square < 65, full_square >= 50)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 30, df['Площадь'].astype(float) < 50),
+                np.logical_and(df[table_name].astype(float) >= 30, df[table_name].astype(float) < 50),
                 np.logical_and(full_square >= 65, full_square < 90)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 50, df['Площадь'].astype(float) < 65),
+                np.logical_and(df[table_name].astype(float) >= 50, df[table_name].astype(float) < 65),
                 full_square < 30),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 50, df['Площадь'].astype(float) < 65),
+                np.logical_and(df[table_name].astype(float) >= 50, df[table_name].astype(float) < 65),
                 np.logical_and(full_square < 50, full_square >= 30)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 50, df['Площадь'].astype(float) < 65),
+                np.logical_and(df[table_name].astype(float) >= 50, df[table_name].astype(float) < 65),
                 np.logical_and(full_square < 90, full_square >= 65)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 50, df['Площадь'].astype(float) < 65),
+                np.logical_and(df[table_name].astype(float) >= 50, df[table_name].astype(float) < 65),
                 np.logical_and(full_square >= 90, full_square < 120)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 65, df['Площадь'].astype(float) < 90),
+                np.logical_and(df[table_name].astype(float) >= 65, df[table_name].astype(float) < 90),
                 np.logical_and(full_square < 50, full_square >= 30)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 65, df['Площадь'].astype(float) < 90),
+                np.logical_and(df[table_name].astype(float) >= 65, df[table_name].astype(float) < 90),
                 np.logical_and(full_square < 65, full_square >= 50)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 65, df['Площадь'].astype(float) < 90),
+                np.logical_and(df[table_name].astype(float) >= 65, df[table_name].astype(float) < 90),
                 np.logical_and(full_square < 120, full_square >= 90)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 65, df['Площадь'].astype(float) < 90),
+                np.logical_and(df[table_name].astype(float) >= 65, df[table_name].astype(float) < 90),
                 full_square >= 120),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 90, df['Площадь'].astype(float) < 120),
+                np.logical_and(df[table_name].astype(float) >= 90, df[table_name].astype(float) < 120),
                 np.logical_and(full_square < 65, full_square >= 50)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 90, df['Площадь'].astype(float) < 120),
+                np.logical_and(df[table_name].astype(float) >= 90, df[table_name].astype(float) < 120),
                 np.logical_and(full_square < 90, full_square >= 65)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 90, df['Площадь'].astype(float) < 120),
+                np.logical_and(df[table_name].astype(float) >= 90, df[table_name].astype(float) < 120),
                 full_square >= 120),
             np.logical_and(
-                df['Площадь'].astype(float) >= 120,
+                df[table_name].astype(float) >= 120,
                 np.logical_and(full_square < 90, full_square >= 65)),
             np.logical_and(
-                df['Площадь'].astype(float) >= 120,
+                df[table_name].astype(float) >= 120,
                 np.logical_and(full_square < 120, full_square >= 90)),
             np.logical_and(
-                df['Площадь'].astype(float) < 30,
+                df[table_name].astype(float) < 30,
                 np.logical_and(full_square < 90, full_square >= 65)),
             np.logical_and(
-                df['Площадь'].astype(float) < 30,
+                df[table_name].astype(float) < 30,
                 np.logical_and(full_square < 120, full_square >= 90)),
             np.logical_and(
-                df['Площадь'].astype(float) < 30,
+                df[table_name].astype(float) < 30,
                 full_square >= 120),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 30, df['Площадь'].astype(float) < 50),
+                np.logical_and(df[table_name].astype(float) >= 30, df[table_name].astype(float) < 50),
                 np.logical_and(full_square < 120, full_square >= 90)),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 30, df['Площадь'].astype(float) < 50),
+                np.logical_and(df[table_name].astype(float) >= 30, df[table_name].astype(float) < 50),
                 full_square > 120),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 50, df['Площадь'].astype(float) < 65),
+                np.logical_and(df[table_name].astype(float) >= 50, df[table_name].astype(float) < 65),
                 full_square >= 120),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 65, df['Площадь'].astype(float) < 90),
+                np.logical_and(df[table_name].astype(float) >= 65, df[table_name].astype(float) < 90),
                 full_square < 30),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 90, df['Площадь'].astype(float) < 120),
+                np.logical_and(df[table_name].astype(float) >= 90, df[table_name].astype(float) < 120),
                 full_square < 30),
             np.logical_and(
-                np.logical_and(df['Площадь'].astype(float) >= 90, df['Площадь'].astype(float) < 120),
+                np.logical_and(df[table_name].astype(float) >= 90, df[table_name].astype(float) < 120),
                 np.logical_and(full_square >= 30, full_square < 50)),
             np.logical_and(
-                df['Площадь'].astype(float) >= 120,
+                df[table_name].astype(float) >= 120,
                 full_square < 30),
             np.logical_and(
-                df['Площадь'].astype(float) >= 120,
+                df[table_name].astype(float) >= 120,
                 np.logical_and(full_square < 50, full_square >= 30)),
             np.logical_and(
-                df['Площадь'].astype(float) >= 120,
+                df[table_name].astype(float) >= 120,
                 np.logical_and(full_square < 65, full_square >= 50)),
         ]
         choicelist = [
@@ -357,16 +393,6 @@ class PoolEstimate:
             metro_stepway_cor=None,
             repair_state=None
     ):
-        # etalon_xls = pd.ExcelFile(self.etalon, engine='openpyxl')
-        # df_etalon = pd.read_excel(etalon_xls, 0)
-        # df_etalon = df_etalon.dropna()
-        # df_etalon = df_etalon.iloc[-2:]
-        # new_header = df_etalon.iloc[0]
-        # df_etalon = df_etalon[1:]
-        # df_etalon.columns = new_header
-
-        # floor = df_etalon.iloc[:, 5].values[-1]
-        # full_floor = df_etalon.iloc[:, 3].values[-1]
         etalon_floor_value = 0
 
         if floor_cor:
@@ -376,11 +402,6 @@ class PoolEstimate:
                 etalon_floor_value = 1
 
         auction_value = -0.045 if auction_cor else 0
-        # full_square = df_etalon.iloc[:, 6].values[-1]
-        # kitchen_squad = df_etalon.iloc[:, 7].values[-1]
-        # has_balcony = df_etalon.iloc[:, 8].values[-1] == 'Да'
-        # is_metro_stepway = df_etalon.iloc[:, 9].values[-1]
-        # repair_state = df_etalon.iloc[:, 10].values[-1]
 
         if repair_state:
             repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
@@ -452,4 +473,125 @@ class PoolEstimate:
         writer.close()
         # result_df = pd.ExcelFile('output.xlsx', engine='openpyxl')
 
-        return [df.to_json(orient="records"), df_etalon.to_json(orient="records")]
+        return [df_etalon.to_json(orient="records"), df.to_json(orient="records")]
+
+    """
+    pull - загруженный пользователем файл для расчета  
+    etalon_price - цена за квадратный метр эталона на основе рассчета предыдущей функции  
+    """
+    def calculate_pull(
+            self,
+            pull: io,
+            address="qwe",
+            room_count=2,
+            material="2",
+            segment="2",
+            etalon_price: float = 323500,
+            max_floor=21,
+            auction_cor=True,
+            floor_cor=14,
+            square_cor=70.8,
+            kitchen_square_cor=12.7,
+            balcony_cor=1,
+            metro_stepway_cor=11,
+            repair_state='муниципальный ремонт'
+    ):
+        etalon_floor_value = 0
+
+        if floor_cor:
+            if floor_cor == max_floor:
+                etalon_floor_value = 2
+            elif 1 < floor_cor < max_floor:
+                etalon_floor_value = 1
+
+        auction_value = -0.045 if auction_cor else 0
+
+        if repair_state:
+            repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
+                0 if repair_state.lower() == 'без отделки' else 2)
+
+        pull_df = pd.read_excel(pull)
+
+        pull_df.rename(columns={
+            "Сегмент (Новостройка, современное жилье, старый жилой фонд)": "Сегмент",
+            "Состояние (без отделки, муниципальный ремонт, с современная отделка)": "Ремонт",
+            "Наличие балкона/лоджии": "Балкон",
+            "Материал стен (Кипич, панель, монолит)": "Материал стен"
+        }, inplace=True)
+
+        pull_df = self.make_pull_data_ready_for_work(pull_df)
+
+        if floor_cor:
+            pull_df['ЭтажК'] = self.calculate_floor_k(pull_df, etalon_floor_value)
+        if square_cor:
+            pull_df['ПлощадьК'] = self.calculate_square_k(pull_df, square_cor)
+        if balcony_cor:
+            pull_df['БалконК'] = self.calculate_balcony_k(pull_df, etalon_balcony=balcony_cor)
+        if kitchen_square_cor:
+            pull_df['КухняК'] = self.calculate_kitchen_k(pull_df, etalon_kitchen_square=kitchen_square_cor)
+        if repair_state:
+            pull_df['РемонтК'] = self.calculate_repair_state_k(pull_df, repair_state)
+
+        pull_df['Итого сумма, кв метр'] = (etalon_price) * (
+                1 + (pull_df['ЭтажК'].astype(float) if floor_cor else 0)
+                + (pull_df['ПлощадьК'].astype(float) if square_cor else 0)
+                + (pull_df['БалконК'].astype(float) if balcony_cor else 0)
+                + (pull_df['КухняК'].astype(float) if kitchen_square_cor else 0)
+                + auction_value) + (pull_df['РемонтК'] if repair_state else 0)
+
+        replacements = {
+            'Ремонт': {
+                0: 'Без ремонта',
+                1: 'Муниципальный ремонт',
+                2: 'Современный ремонт',
+            }
+        }
+
+        pull_df.replace(replacements, inplace=True, regex=True)
+
+        pull_df.dropna(inplace=True)
+
+        replacements = {
+            'Материал стен': {
+                0: 'Монолит',
+                1: 'Кирпич',
+                2: 'панельный',
+            }
+        }
+
+        pull_df.replace(replacements, inplace=True, regex=True)
+        dict_etalon = {"row_1": [address,
+                                 room_count,
+                                 segment,
+                                 max_floor,
+                                 material,
+                                 floor_cor,
+                                 square_cor,
+                                 kitchen_square_cor,
+                                 balcony_cor,
+                                 metro_stepway_cor,
+                                 repair_state,
+                                 etalon_price]}
+        df_etalon = pd.DataFrame.from_dict(dict_etalon, orient='index')
+
+        columns = [
+            'Местоположение',
+            'Количество комнат',
+            'Сегмент',
+            'Этажность дома',
+            "Материал стен(Кирпич, панель, монолит)",
+            "Этаж расположения",
+            "Площадь квартиры, кв.м",
+            "Площадь кухни, кв.м",
+            "Балкон",
+            "Удаленность от станции метро, мин.пешком",
+            "Состояние",
+            "Цена за кв метр"
+        ]
+        df_etalon.columns = columns
+        writer = pd.ExcelWriter('output_pull.xlsx', engine='openpyxl')
+        df_etalon.to_excel(writer, sheet_name='Эталон')
+        pull_df.to_excel(writer, sheet_name='Пул')
+        writer.close()
+
+        return [df_etalon.to_json(orient="records"), pull_df.to_json(orient="records")]
