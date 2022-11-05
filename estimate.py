@@ -1,4 +1,3 @@
-import io
 from io import BytesIO
 
 import pandas as pd
@@ -488,7 +487,7 @@ class PoolEstimate:
     """
     def calculate_pull(
             self,
-            pull: io,
+            pull: BytesIO,
             etalon_json,
             address="qwe",
             room_count=2,
