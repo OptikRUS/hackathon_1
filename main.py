@@ -22,11 +22,6 @@ app.add_middleware(
 )
 
 
-@app.get("/hello")
-async def main():
-    return {"message": "Hello World"}
-
-
 @app.get("/analog")
 async def get_etalon_and_analog(
         bbox: str,
