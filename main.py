@@ -7,7 +7,7 @@ from fastapi.exceptions import HTTPException
 from parser_class import CianParser
 from estimate import PoolEstimate
 
-app = FastAPI()
+app = FastAPI(title="Real estate calculation")
 
 origins = [
     "http://localhost:3000",
