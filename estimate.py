@@ -135,6 +135,10 @@ class PoolEstimate:
             etalon_max_floor
     ):
         df['Балкон'] = np.where(df['Балкон'].str.contains('Нет', case=False), 0, 1)
+        df['Количество комнат'] = np.where(df['Количество комнат'].str.contains('студия', case=False), 7,
+                                           df['Количество комнат'])
+        df['Количество комнат'] = np.where(df['Количество комнат'].str.contains('пентхаус', case=False), 9,
+                                           df['Количество комнат'])
 
         replacements = {
             'Ремонт': {
@@ -193,7 +197,6 @@ class PoolEstimate:
             0.042
         ]
         return np.select(cond_list, choice_list, default=0.0)
-
 
     def calculate_balcony_k(self, df: pd.DataFrame, etalon_balcony: int):
         """Рассчитать коэффициент по наличию балкона"""
@@ -386,10 +389,6 @@ class PoolEstimate:
         ]
         return np.select(condlist, choicelist, default=0.0)
 
-    """
-        max_floor - Этажность
-    """
-
     def calculate_cor(
             self,
             data: BytesIO,
@@ -407,6 +406,23 @@ class PoolEstimate:
             metro_stepway_cor=None,
             repair_state=None
     ):
+        """
+            :param data - Файл для расчета аналогов
+            :param exclude_list - Список исключений аналогов для перезапроса
+            :param max_floor - Этажность здания
+            :param address - Адрес недвижимости
+            :param room_count - Количество комнат
+            :param material - Материалы стен
+            :param segment - Современность жилья
+            :param auction_cor - Учитывать ли корректировку на торг
+            :param floor_cor - Учитывать ли корректировку на этаж расположения
+            :param square_cor - Учитывать ли корректировку на площадь квартиры
+            :param kitchen_square_cor - Учитывать ли корректировку на площадь кухни
+            :param balcony_cor - Учитывать ли корректировку на наличие балкона
+            :param metro_stepway_cor - Учитывать ли корректировку на удаленность метро
+            :param repair_state - Учитывать ли корректировку на состояние ремонта
+        """
+
         if exclude_list is None:
             exclude_list = []
         etalon_floor_value = 0
@@ -503,6 +519,7 @@ class PoolEstimate:
     pull - загруженный пользователем файл для расчета  
     etalon_price - цена за квадратный метр эталона на основе рассчета предыдущей функции  
     """
+
     def calculate_pull(
             self,
             pull: BytesIO,
@@ -582,6 +599,11 @@ class PoolEstimate:
 
         pull_df.replace(replacements, inplace=True, regex=True)
 
+        pull_df['Количество комнат'] = np.where(pull_df['Количество комнат'] == 7, 'Студия',
+                                           pull_df['Количество комнат'])
+        pull_df['Количество комнат'] = np.where(pull_df['Количество комнат'] == 9, 'Пентхаус',
+                                           pull_df['Количество комнат'])
+
         pull_df.dropna(inplace=True)
 
         replacements = {
@@ -600,4 +622,3 @@ class PoolEstimate:
         writer.close()
 
         return [df_etalon.to_json(orient="records"), pull_df.to_json(orient="records")]
-
