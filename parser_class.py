@@ -8,7 +8,7 @@ class CianParser:
         'engine_version': '2',
         'offer_type': 'flat',
         'origin': 'map',
-        'zoom': '17',
+        'zoom': '15',
     }
 
     headers = {
