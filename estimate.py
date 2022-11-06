@@ -447,6 +447,7 @@ class PoolEstimate:
         """
             выравнивание данных с цианом по типу материала стен
         """
+
         if material == 2:
             material = 0
         if material == 3:
@@ -520,10 +521,10 @@ class PoolEstimate:
         df.to_excel(writer, sheet_name='Аналоги')
         writer.close()
 
-        etalon_json = df_etalon.to_json(orient="records")
+        etalon_json = df_etalon.to_json(orient="records", force_ascii=False)
         # result_df = pd.ExcelFile('output.xlsx', engine='openpyxl')
 
-        return [etalon_json, df.to_json(orient="records")]
+        return [etalon_json, df.to_json(orient="records", force_ascii=False)]
 
     """
     pull - загруженный пользователем файл для расчета  
@@ -631,4 +632,5 @@ class PoolEstimate:
         pull_df.to_excel(writer, sheet_name='Пул')
         writer.close()
 
-        return [df_etalon.to_json(orient="records"), pull_df.to_json(orient="records")]
+        return [df_etalon.to_json(orient="records", force_ascii=False),
+                pull_df.to_json(orient="records", force_ascii=False)]
