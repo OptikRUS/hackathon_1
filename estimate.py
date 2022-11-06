@@ -50,8 +50,8 @@ class PoolEstimate:
         if balcony_cor:
             if 'Балкон' in missing_columns:
                 missing_columns.remove('Балкон')
-        if repair_state:
-            missing_columns.remove('Ремонт')
+        # if repair_state:
+        #     missing_columns.remove('Ремонт')
         missing_columns.append('Высота потолков, м')
         missing_columns.append('Тип')
         # missing_columns.append('Название ЖК')
@@ -444,6 +444,14 @@ class PoolEstimate:
         if repair_state:
             repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
                 0 if repair_state.lower() == 'без отделки' else 2)
+
+        """
+            метод для выравнивания данных с цианом по типу материала стен
+        """
+        if material == 2:
+            material = 0
+        elif material == 3:
+            material = 2
 
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
