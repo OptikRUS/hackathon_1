@@ -1,8 +1,11 @@
 # Real estate calculation
-Приложение пасчёта эталона по аналогу, расчёт пула по эталону, отображение аналогов на карте, возможность корректировки стоимости 
-в зависимости от параметром
+* Приложение расчёта эталона по аналогу
+* Расчёт пула по эталону и отображение аналогов на карте 
+* Возможность корректировки стоимости в зависимости от параметров
 
-<a href="https://github.com/OptikRUS/ht/blob/files/tz.pdf" target="_blank">Техническое задание</a>
+[Техническое задание](https://github.com/OptikRUS/ht/blob/files/tz.pdf)
+
+[//]: # ([Ссылка на приложение]&#40;ссылка на хост&#41; 🌐)
 
 ## Техническая документация:
 * Переименуйте `.env.example` в `.env`
@@ -16,11 +19,23 @@
   * `/analog` и `/etalon` - ендпоинты для получения аналогов и эталонов
   * <details>
       <summary>GET-запрос</summary>
-        <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/1.png" alt="img from doc">
+        <img src="https://github.com/OptikRUS/ht/blob/files/1.png" alt="img from doc">
     </details>
   * <details>
       <summary>POST-запрос</summary>
-        <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/2.png" alt="img from doc">
+        <img src="https://github.com/OptikRUS/ht/blob/files/2.png" alt="img from doc">
     </details>
 
-[//]: # (## Пользовательская документация:)
+## Пользовательская интерфейс:
+<details>
+      <summary>Введение данных эталона</summary>
+        <img src="https://github.com/OptikRUS/ht/blob/files/3.png" alt="UI image">
+</details>
+<details>
+    <summary>Поиск и корректировка аналогов и расчёт эталона</summary>
+      <img src="https://github.com/OptikRUS/ht/blob/files/4.png" alt="UI image">
+</details>
+<details>
+    <summary>Расчёт и корректировка пула</summary>
+      <img src="https://github.com/OptikRUS/ht/blob/files/5.png" alt="UI image">
+</details>
