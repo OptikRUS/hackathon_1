@@ -16,23 +16,23 @@
   * `/analog` и `/etalon` - ендпоинты для получения аналогов и эталонов
   * <details>
       <summary>GET-запрос</summary>
-        <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/1.png" alt="img from doc">
+        <img src="https://github.com/OptikRUS/ht/blob/files/1.png" alt="img from doc">
     </details>
   * <details>
       <summary>POST-запрос</summary>
-        <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/2.png" alt="img from doc">
+        <img src="https://github.com/OptikRUS/ht/blob/files/2.png" alt="img from doc">
     </details>
 
 ## Пользовательская интерфейс:
-* <details>
+<details>
       <summary>Введение данных эталона</summary>
         <img src="https://github.com/OptikRUS/ht/blob/files/3.png" alt="UI image">
-    </details>
-* <details>
+</details>
+<details>
     <summary>Поиск и корректировка аналогов и расчёт эталона</summary>
       <img src="https://github.com/OptikRUS/ht/blob/files/4.png" alt="UI image">
-  </details>
-* <details>
+</details>
+<details>
     <summary>Расчёт и корректировка пула</summary>
       <img src="https://github.com/OptikRUS/ht/blob/files/5.png" alt="UI image">
-  </details>
+</details>
