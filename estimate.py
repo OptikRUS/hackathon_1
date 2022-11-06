@@ -52,12 +52,12 @@ class PoolEstimate:
                 missing_columns.remove('Балкон')
         # if repair_state:
         #     missing_columns.remove('Ремонт')
-        missing_columns.append('Высота потолков, м')
-        missing_columns.append('Тип')
-        # missing_columns.append('Название ЖК')
-        missing_columns.append('Окна')
-        missing_columns.append('Количество комнат')
-        missing_columns.append('Описание')
+        # missing_columns.append('Высота потолков, м')
+        # missing_columns.append('Тип')
+        # # missing_columns.append('Название ЖК')
+        # missing_columns.append('Окна')
+        # missing_columns.append('Количество комнат')
+        # missing_columns.append('Описание')
         df = df.drop(columns=list(missing_columns))
 
         df = df[~df.ID.isin(exclude_list)]
@@ -453,7 +453,7 @@ class PoolEstimate:
         if material == 3:
             material = 2
 
-        print("material now: " + str(material))
+        # print("material now: " + str(material))
 
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(

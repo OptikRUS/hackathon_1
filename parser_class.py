@@ -80,7 +80,7 @@ class CianParser:
                                    f"house_material%5B6%5D={self.params['house_material[0]']}&"
                                    f"minfloorn={self.params['minfloorn']}&"
                                    f"maxfloorn={self.params['maxfloorn']}&"
-                                   f"maxfloorn={self.params['maxfloorn']}&"
                                    f"min_house_year={self.params['min_house_year']}&"
                                    f"max_house_year={self.params['max_house_year']}")
+            print(response.url)
             return response.content
