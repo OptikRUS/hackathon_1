@@ -2,7 +2,7 @@ import {TStateForResponse} from "../../index";
 import {Box, Typography} from "@mui/material";
 import {InputFile} from "../InputFile";
 import {useMemo} from "react";
-import {DataGrid, GridColDef, GridValueGetterParams} from '@mui/x-data-grid';
+import {DataGrid} from '@mui/x-data-grid';
 import {MapAnalogs} from "./components/MapAnalogs";
 
 type TTableAnalogEtalonProps = {

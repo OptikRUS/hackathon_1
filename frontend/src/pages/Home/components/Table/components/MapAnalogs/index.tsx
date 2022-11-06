@@ -1,5 +1,5 @@
 import {TCoords} from "src/common/types";
-import {Circle, Map, Placemark, SearchControl} from "@pbe/react-yandex-maps";
+import {Circle, Map, Placemark} from "@pbe/react-yandex-maps";
 import { useSelector} from "react-redux";
 import {getCurrentCoords} from "src/common/store/estation";
 import {useEffect, useState} from "react";
@@ -36,7 +36,7 @@ export const MapAnalogs = ({addresses}: TMapAnalogsProps) => {
         })
 
 
-    }, [])
+    }, [addresses])
 
 
     return (

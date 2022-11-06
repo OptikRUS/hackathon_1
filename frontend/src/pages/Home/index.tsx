@@ -189,7 +189,7 @@ export const Home = () => {
         const roundSix = (val: number) => val.toFixed(6)
 
         if (center) {
-            required.bbox = `${roundSix(center[0] + 0.015)}%2C${roundSix(center[1] + 0.015)}%2C${roundSix(center[0] - 0.015)}%2C${roundSix(center[1] - 0.015)}`
+            required.bbox = `${roundSix(center[0] - 0.015)}%2C${roundSix(center[1] - 0.015)}%2C${roundSix(center[0] + 0.015)}%2C${roundSix(center[1] + 0.015)}`
         }
 
         if (address) {
