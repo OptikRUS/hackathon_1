@@ -1,7 +1,8 @@
 import json
 
-from fastapi import FastAPI, UploadFile, File, Depends
+from fastapi import FastAPI, UploadFile, File, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import HTTPException
 
 from parser_class import CianParser
 from estimate import PoolEstimate
@@ -100,6 +101,9 @@ async def pool_estimate(pool: UploadFile = File(...), estimation=Depends(PoolEst
     """
     `pool:` файл пула\n
     """
-    with open('etalon.json') as json_file:
-        data = json.load(json_file)
+    try:
+        with open('etalon.json') as json_file:
+            data = json.load(json_file)
+    except FileNotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You don't have etalon file")
     return estimation.calculate_pull(pull=pool.file._file, etalon_json=data)
