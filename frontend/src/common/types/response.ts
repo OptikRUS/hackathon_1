@@ -31,3 +31,23 @@ export interface TEtalonInResponse {
     'Состояние(без отделки, муниципальный ремонт, с современная отделка)': number | null;
     'Цена за кв метр': number;
 }
+
+export interface TPoolInResponse {
+        'Местоположение': string;
+        'Количество комнат': number;
+        'Сегмент': string;
+        'Этажность дома': number;
+        'Материал стен': string;
+        'Этаж расположения': number;
+        'Площадь квартиры, кв.м': number;
+        'Площадь кухни, кв.м': number;
+        'Балкон': number;
+        'Удаленность от станции метро, мин. пешком': number;
+        'Ремонт': string;
+        'ЭтажК': number;
+        'ПлощадьК': number;
+        'БалконК': number;
+        'КухняК': number;
+        'РемонтК': number;
+        'Итого сумма, кв метр': number;
+    }
