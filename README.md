@@ -14,5 +14,13 @@
   * CianParser - класс запроса выборки с сайта cian.ru
   * PoolEstimate - класс расчёта аналогов и эталонов
   * `/analog` и `/etalon` - ендпоинты для получения аналогов и эталонов
+  * <details>
+      <summary>GET-запрос</summary>
+        <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/1.png">
+    </details>
+  * <details>
+      <summary>POST-запрос</summary>
+        <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/2.png">
+    </details>
 
 [//]: # (## Пользовательская документация:)
