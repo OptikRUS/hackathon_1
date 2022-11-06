@@ -90,7 +90,7 @@ async def get_etalon_and_analog(
         repair_state=repair_state
     )
 
-    with open('etalon.json', 'w', encoding='utf-8') as outfile:
+    with open('etalon.json', 'w') as outfile:
         json.dump(etalon, outfile)
     return {"etalon": etalon, "analog": analog}
 
