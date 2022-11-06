@@ -48,7 +48,8 @@ class PoolEstimate:
         missing_df = self.missing_values_table(df)
         missing_columns = list(missing_df[missing_df['% of Total Values'] > 40].index)
         if balcony_cor:
-            missing_columns.remove('Балкон')
+            if 'Балкон' in missing_columns:
+                missing_columns.remove('Балкон')
         if repair_state:
             missing_columns.remove('Ремонт')
         missing_columns.append('Высота потолков, м')
