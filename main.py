@@ -109,4 +109,6 @@ async def pool_estimate(pool: UploadFile = File(...), estimation=Depends(PoolEst
             data = json.load(json_file)
     except FileNotFoundError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You don't have etalon file")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     return estimation.calculate_pull(pull=pool.file._file, etalon_json=data)
