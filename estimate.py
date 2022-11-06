@@ -37,11 +37,14 @@ class PoolEstimate:
     def make_data_ready_for_work(
             self,
             df,
+            exclude_list=None,
             etalon_square=None,
             kitchen_square_cor=None,
             balcony_cor=None,
             repair_state=None):
         """Подготовить данные с циана для корректировки, удаление неподходящих аналогов"""
+        if exclude_list is None:
+            exclude_list = []
         missing_df = self.missing_values_table(df)
         missing_columns = list(missing_df[missing_df['% of Total Values'] > 40].index)
         if balcony_cor:
@@ -55,6 +58,8 @@ class PoolEstimate:
         missing_columns.append('Количество комнат')
         missing_columns.append('Описание')
         df = df.drop(columns=list(missing_columns))
+
+        df = df[~df.ID.isin(exclude_list)]
 
         if balcony_cor:
             df['Балкон'] = np.where(df['Балкон'].isna(), 0, 1)
@@ -388,6 +393,7 @@ class PoolEstimate:
     def calculate_cor(
             self,
             data: BytesIO,
+            exclude_list=None,
             address="",
             room_count=0,
             material="",
@@ -401,6 +407,8 @@ class PoolEstimate:
             metro_stepway_cor=None,
             repair_state=None
     ):
+        if exclude_list is None:
+            exclude_list = []
         etalon_floor_value = 0
 
         if floor_cor:
@@ -423,6 +431,7 @@ class PoolEstimate:
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
             df,
+            exclude_list=exclude_list,
             etalon_square=square_cor,
             kitchen_square_cor=kitchen_square_cor,
             balcony_cor=has_balcony,
