@@ -50,7 +50,7 @@ export const MapAnalogs = ({addresses}: TMapAnalogsProps) => {
                     strokeWidth: 5,
                 }}
             />}
-            {addrCoords.length > 0 && addrCoords.map(coords => <Placemark geometry={coords}/>)}
+            {addrCoords.length > 0 && addrCoords.map((coords, index) => <Placemark key={`${coords[0] + index}`} geometry={coords}/>)}
         </Map>
     )
 }

@@ -1,9 +1,14 @@
 import {TStateForResponse} from "../../index";
-import {Box, Typography} from "@mui/material";
+import {Box, Button, Typography} from "@mui/material";
 import {InputFile} from "../InputFile";
-import {useMemo} from "react";
+import {useMemo, useState} from "react";
 import {DataGrid} from '@mui/x-data-grid';
 import {MapAnalogs} from "./components/MapAnalogs";
+import axios from "axios";
+import {toast} from "react-toastify";
+import {TEtalonInResponse} from "src/common/types/response";
+import {TPoolInResponse} from "src/common/types/response";
+import {PoolTable} from "./components/PoolTable";
 
 type TTableAnalogEtalonProps = {
     tableData: TStateForResponse
@@ -49,11 +54,48 @@ export const TableAnalogEtalon = ({tableData, file, setFile}: TTableAnalogEtalon
 
         const rows = analogs.map(el => ({...el, id: el['ID']}))
 
-        const table = {columns, rows}
-
-        return table
+        return {columns, rows}
 
     }, [tableData])
+
+    const [poolState, setPoolState] = useState<{etalon: TEtalonInResponse[], pool: TPoolInResponse[]}>({
+        etalon: [],
+        pool: []
+    })
+
+
+    const sendPool = () => {
+
+        const DOMAIN = process.env.REACT_APP_DOMAIN || 'http://127.0.0.1:8000'
+
+        if (file) {
+
+            const formData = new FormData()
+
+            formData.append('pool', file)
+
+            axios.post<[string, string]>(`${DOMAIN}/etalon`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            }).then(res => {
+                const [etalon, newEtalon] = res.data
+
+                const parsedEtalon = JSON.parse(etalon) as TEtalonInResponse[]
+                const parsedPool = JSON.parse(newEtalon) as TPoolInResponse[]
+
+                setPoolState(() => ({
+                    etalon: parsedEtalon,
+                    pool: parsedPool
+                }))
+
+            })
+        } else {
+            toast.error('Прикрепите файл')
+        }
+
+
+    }
 
 
     const analogAddresses = tableData.analog.map(el => el['Адрес'])
@@ -72,11 +114,11 @@ export const TableAnalogEtalon = ({tableData, file, setFile}: TTableAnalogEtalon
                 {Object.keys(etalonData).map(etalonKey => <Box
                     sx={cellStyle}
                     key={etalonKey}>{etalonKey}</Box>)}
-                {Object.values(etalonData).map(value => <Box
+                {Object.values(etalonData).map((value, index) => <Box
                     sx={cellStyle}
-                    key={value}>{value}</Box>)}
+                    key={`${value}-${index}`}>{value}</Box>)}
             </Box>
-            <Typography variant={'h2'} textAlign={'center'} sx={{my: 3}}>Список аналагов</Typography>
+            <Typography variant={'h2'} textAlign={'center'} sx={{my: 3}}>Список аналогов</Typography>
             <Box sx={{height: '400px', width: '100%'}}>
                 <DataGrid
                     getRowHeight={() => 'auto'}
@@ -95,6 +137,14 @@ export const TableAnalogEtalon = ({tableData, file, setFile}: TTableAnalogEtalon
             </Box>
 
             <InputFile file={file} setFile={setFile}/>
+            <Box sx={{mt: 3, display: 'flex', justifyContent: 'center'}}>
+                <Button onClick={sendPool} sx={{width: '200px'}} variant="contained" component="label">
+                    Рассчитать пул
+                </Button>
+            </Box>
+            <Box>
+                {poolState.etalon.length > 0 && <PoolTable pool={poolState.pool} etalon={poolState.etalon}/>}
+            </Box>
         </Box>
     )
 }

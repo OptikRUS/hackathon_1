@@ -63,7 +63,7 @@ const SegmentOptions = [
     },
     {
         key: 'current',
-        label: 'Современной жилье'
+        label: 'Современное жилье'
     },
 ]
 
@@ -84,8 +84,8 @@ const segmentYears = {
 
 const HouseMaterialOptions = [
     {key: '1', label: 'Кирпич'},
-    {key: '4', label: 'Панель'},
-    {key: '3', label: 'Монолит'},
+    {key: '3', label: 'Панель'},
+    {key: '2', label: 'Монолит'},
 ]
 
 const BalconyOptions = [
@@ -130,6 +130,7 @@ type TRequired = {
     max_year: string
     address: string
     segment: string
+    center: string
 }
 
 type TOptional = {
@@ -180,16 +181,20 @@ export const Home = () => {
             min_year: "",
             room_type: "",
             segment: "",
-            bbox: ''
+            bbox: '',
+            center: '',
         }
 
         const optional: Partial<TOptional> = {}
 
 
-        const roundSix = (val: number) => val.toFixed(6)
+        const roundSix = (val: number) => val.toFixed(8)
+
+        const coord = 0.02
 
         if (center) {
-            required.bbox = `${roundSix(center[0] - 0.015)}%2C${roundSix(center[1] - 0.015)}%2C${roundSix(center[0] + 0.015)}%2C${roundSix(center[1] + 0.015)}`
+            required.bbox = `${roundSix(center[0] - coord)}%2C${roundSix(center[1] - coord)}%2C${roundSix(center[0] + coord)}%2C${roundSix(center[1] + coord)}`
+            required.center = `${center[0]}%2C${center[1]}`
         }
 
         if (address) {
