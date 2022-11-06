@@ -11,15 +11,12 @@ services:
 
   frontend:
     container_name: frontend
-    image: node:latest
-    working_dir: "/app/"
-    volumes:
-      - './frontend:/app'
+    build:
+      context: './frontend'
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
-    command: sh -c "
-      npm install &&
-      npm start
-      "
+      - "80:80"
     depends_on:
       - backend
+    environment:
+      NODE_ENV: production

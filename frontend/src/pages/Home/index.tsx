@@ -276,7 +276,7 @@ export const Home = () => {
                 .catch((err) => {
                     setLoading(() => false)
                     if (err instanceof Error) {
-                        toast.error(err.message)
+                        toast.error('Объекты не найдены')
                     } else {
                         toast.error('Oops... unknown error')
                     }
