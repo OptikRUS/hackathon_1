@@ -1,9 +1,10 @@
-from fastapi import FastAPI, UploadFile, File
+import json
+
+from fastapi import FastAPI, UploadFile, File, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from parser_class import CianParser
 from estimate import PoolEstimate
-from fake_db import db
 
 app = FastAPI()
 
@@ -28,11 +29,11 @@ async def main():
 @app.get("/analog")
 async def get_etalon_and_analog(
         bbox: str,
-        room_type: str,
-        house_material_type: str,
+        room_type: int,
+        house_material_type: int,
         floor: int,
-        min_year: str,
-        max_year: str,
+        min_year: int,
+        max_year: int,
         address: str,
         segment: str,
         auction_cor: bool = None,
@@ -40,8 +41,9 @@ async def get_etalon_and_analog(
         square_cor: float = None,
         kitchen_square_cor: float = None,
         balcony_cor: bool = None,
-        metro_stepway_cor: str = None,
-        repair_state: str = None,
+        metro_stepway_cor: int = None,
+        repair_state: str | int = None,
+        estimation=Depends(PoolEstimate)
 ):
     """
     # Параметры для CIAN:\n
@@ -72,8 +74,6 @@ async def get_etalon_and_analog(
                           max_year=max_year
                           )
 
-    estimation = PoolEstimate()
-
     etalon, analog = estimation.calculate_cor(
         data=response.get_doc,
         address=address,
@@ -90,15 +90,16 @@ async def get_etalon_and_analog(
         repair_state=repair_state
     )
 
-    db.update({"etalon": etalon})
-
+    with open('etalon.json', 'w', encoding='utf-8') as outfile:
+        json.dump(etalon, outfile)
     return {"etalon": etalon, "analog": analog}
 
 
 @app.post("/etalon")
-async def pool_estimate(pool: UploadFile = File(...)):
+async def pool_estimate(pool: UploadFile = File(...), estimation=Depends(PoolEstimate)):
     """
     `pool:` файл пула\n
     """
-    estimation = PoolEstimate()
-    return estimation.calculate_pull(pull=pool.file._file, etalon_json=db["etalon"])
+    with open('etalon.json') as json_file:
+        data = json.load(json_file)
+    return estimation.calculate_pull(pull=pool.file._file, etalon_json=data)
