@@ -90,6 +90,11 @@ export const TableAnalogEtalon = ({tableData, file, setFile}: TTableAnalogEtalon
                 }))
 
             })
+                .catch(err => {
+                    if (err instanceof Error) {
+                        toast.error(err.message)
+                    }
+                })
         } else {
             toast.error('Прикрепите файл')
         }
