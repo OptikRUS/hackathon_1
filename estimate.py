@@ -136,10 +136,9 @@ class PoolEstimate:
             etalon_max_floor
     ):
         df['Балкон'] = np.where(df['Балкон'].str.contains('Нет', case=False), 0, 1)
-        df['Количество комнат'] = np.where(df['Количество комнат'].str.contains('студия', case=False), 7,
+        df['Количество комнат'] = np.where(df['Количество комнат'].astype(str).str.contains('студия', case=False), 7,
                                            df['Количество комнат'])
-        df['Количество комнат'] = np.where(df['Количество комнат'].str.contains('пентхаус', case=False), 9,
-                                           df['Количество комнат'])
+        df['Количество комнат'] = np.where(df['Количество комнат'].astype(str).str.contains('пентхаус', case=False), 9, df['Количество комнат'])
 
         replacements = {
             'Ремонт': {
