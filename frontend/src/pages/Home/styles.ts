@@ -17,7 +17,6 @@ export const createStyle = () => ({
             mb: 3,
             width: '100%'
         }
-
     },
     optionalFields: {
         display: 'flex',

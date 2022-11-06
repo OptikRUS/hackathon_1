@@ -1,16 +1,16 @@
 import LoadingButton from '@mui/lab/LoadingButton';
 import Box from '@mui/material/Box';
 import SendIcon from '@mui/icons-material/Send';
-import {useState} from "react";
 
 
-export const SendButton = () => {
+type TSendButtonProps = {
+    onClick: () => void
+    loading: boolean
+}
 
-    const [loading, setLoading] = useState(false);
 
-    function handleClick() {
-        setLoading((prevState) => !prevState);
-    }
+export const SendButton = ({onClick, loading}: TSendButtonProps) => {
+
 
     return (
         <Box>
@@ -19,9 +19,9 @@ export const SendButton = () => {
                     margin: '0 auto',
                     width: 'fit-content'
                 }}
-                onClick={handleClick}
             >
                 <LoadingButton
+                    onClick={onClick}
                     size="large"
                     endIcon={<SendIcon/>}
                     loading={loading}
