@@ -395,7 +395,7 @@ class PoolEstimate:
             exclude_list=None,
             address="",
             room_count=0,
-            material="",
+            material=2,
             segment="",
             max_floor=0,
             auction_cor=None,
@@ -445,12 +445,14 @@ class PoolEstimate:
                 0 if repair_state.lower() == 'без отделки' else 2)
 
         """
-            метод для выравнивания данных с цианом по типу материала стен
+            выравнивание данных с цианом по типу материала стен
         """
         if material == 2:
             material = 0
-        elif material == 3:
+        if material == 3:
             material = 2
+
+        print("material now: " + str(material))
 
         df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
@@ -492,7 +494,7 @@ class PoolEstimate:
                                  floor_cor,
                                  square_cor,
                                  kitchen_square_cor,
-                                 balcony_cor,
+                                 has_balcony,
                                  metro_stepway_cor,
                                  repair_state,
                                  etalon_price]}
