@@ -93,10 +93,10 @@ async def get_etalon_and_analog(
             json.dump(etalon, outfile)
         return {"etalon": etalon, "analog": analog}
 
-    except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except KeyError:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Данные по указанным параметрам не найдены")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @app.post("/etalon")
