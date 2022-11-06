@@ -1,4 +1,3 @@
-import io
 from io import BytesIO
 
 import pandas as pd
@@ -6,9 +5,6 @@ import numpy as np
 
 
 class PoolEstimate:
-    def __init__(self, data: BytesIO):
-        self.data = data
-
     def missing_values_table(self, df):
         # Total missing values
         mis_val = df.isnull().sum()
@@ -391,6 +387,7 @@ class PoolEstimate:
 
     def calculate_cor(
             self,
+            data: BytesIO,
             address="",
             room_count=0,
             material="",
@@ -423,7 +420,7 @@ class PoolEstimate:
             repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
                 0 if repair_state.lower() == 'без отделки' else 2)
 
-        df = pd.read_excel(self.data)
+        df = pd.read_excel(data)
         df = self.make_data_ready_for_work(
             df,
             etalon_square=square_cor,

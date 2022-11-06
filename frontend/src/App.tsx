@@ -7,10 +7,11 @@ import {createTheme, ThemeProvider} from "@mui/material/styles";
 import {ColorModeContext} from './common/context';
 import {ThemeToggler} from "./common/components";
 import {Box} from "@mui/material";
+import {ToastContainer} from "react-toastify";
 
 
 function App() {
-    const [mode, setMode] = useState<'light' | 'dark'>('light');
+    const [mode, setMode] = useState<'light' | 'dark'>('dark');
     const colorMode = useMemo(
         () => ({
             toggleColorMode: () => {
@@ -31,13 +32,12 @@ function App() {
     );
 
     return (
-
         <ReduxProvider store={store}>
             <ColorModeContext.Provider value={colorMode}>
                 <ThemeProvider theme={theme}>
                     <YMaps
                         query={{
-                            apikey: '08e5412d-a68d-4962-bbd1-723a3e7c14a5'
+                            apikey: process.env.REACT_APP_API_SECRET_KEY
                         }}
                     >
                         <Box
@@ -50,6 +50,7 @@ function App() {
                             <ThemeToggler/>
                             <Home/>
                         </Box>
+                        <ToastContainer/>
 
                     </YMaps>
                 </ThemeProvider>
