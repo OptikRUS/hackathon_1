@@ -23,4 +23,16 @@
         <img src="https://raw.githubusercontent.com/OptikRUS/ht/2e495ca87815537ba668657bfa79c7f684bbf646/2.png" alt="img from doc">
     </details>
 
-[//]: # (## Пользовательская документация:)
+## Пользовательская интерфейс:
+* <details>
+      <summary>Введение данных эталона</summary>
+        <img src="https://github.com/OptikRUS/ht/blob/files/3.png" alt="UI image">
+    </details>
+* <details>
+    <summary>Поиск и корректировка аналогов и расчёт эталона</summary>
+      <img src="https://github.com/OptikRUS/ht/blob/files/4.png" alt="UI image">
+  </details>
+* <details>
+    <summary>Расчёт и корректировка пула</summary>
+      <img src="https://github.com/OptikRUS/ht/blob/files/5.png" alt="UI image">
+  </details>
