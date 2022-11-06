@@ -89,7 +89,6 @@ async def get_etalon_and_analog(
             metro_stepway_cor=metro_stepway_cor,
             repair_state=repair_state
         )
-
         with open('etalon.json', 'w') as outfile:
             json.dump(etalon, outfile)
         return {"etalon": etalon, "analog": analog}
