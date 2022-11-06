@@ -67,33 +67,37 @@ async def get_etalon_and_analog(
     `metro_stepway_cor:` количество минут до метро\n
     `repair_state:` состояниие ремонта\n
     """
-    response = CianParser(bbox=bbox,
-                          room_type=room_type,
-                          floor=floor,
-                          house_material_type=house_material_type,
-                          min_year=min_year,
-                          max_year=max_year
-                          )
+    try:
+        response = CianParser(bbox=bbox,
+                              room_type=room_type,
+                              floor=floor,
+                              house_material_type=house_material_type,
+                              min_year=min_year,
+                              max_year=max_year
+                              )
 
-    etalon, analog = estimation.calculate_cor(
-        data=response.get_doc,
-        address=address,
-        room_count=room_type,
-        material=house_material_type,
-        segment=segment,
-        max_floor=floor,
-        auction_cor=auction_cor,
-        floor_cor=floor_cor,
-        square_cor=square_cor,
-        kitchen_square_cor=kitchen_square_cor,
-        balcony_cor=balcony_cor,
-        metro_stepway_cor=metro_stepway_cor,
-        repair_state=repair_state
-    )
+        etalon, analog = estimation.calculate_cor(
+            data=response.get_doc,
+            address=address,
+            room_count=room_type,
+            material=house_material_type,
+            segment=segment,
+            max_floor=floor,
+            auction_cor=auction_cor,
+            floor_cor=floor_cor,
+            square_cor=square_cor,
+            kitchen_square_cor=kitchen_square_cor,
+            balcony_cor=balcony_cor,
+            metro_stepway_cor=metro_stepway_cor,
+            repair_state=repair_state
+        )
 
-    with open('etalon.json', 'w') as outfile:
-        json.dump(etalon, outfile)
-    return {"etalon": etalon, "analog": analog}
+        with open('etalon.json', 'w') as outfile:
+            json.dump(etalon, outfile)
+        return {"etalon": etalon, "analog": analog}
+
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @app.post("/etalon")
