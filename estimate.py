@@ -163,7 +163,7 @@ class PoolEstimate:
 
         df['Количество комнат'] = np.where(df['Количество комнат'] == etalon_room_count, df['Количество комнат'],
                                            np.nan)
-        df['Сегмент'] = np.where(df['Сегмент'] == etalon_segment, df['Сегмент'], np.nan)
+        df['Сегмент'] = np.where(df['Сегмент'].str.contains(etalon_segment, case=False), df['Сегмент'], np.nan)
         df['Этажность дома'] = np.where(df['Этажность дома'] == etalon_max_floor, df['Этажность дома'], np.nan)
         df['Материал стен'] = np.where(df['Материал стен'] == etalon_material, df['Материал стен'], np.nan)
 
