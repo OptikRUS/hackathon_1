@@ -10,7 +10,7 @@ from estimate import PoolEstimate
 app = FastAPI(title="Real estate calculation", version="0.1.2")
 
 origins = [
-    "http://localhost:3000",
+    "*",
 ]
 
 app.add_middleware(
