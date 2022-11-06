@@ -77,11 +77,11 @@ class CianParser:
                                    f"bbox={self.params['bbox']}&"
                                    f"center={self.params['center']}&"
                                    f"room{self.params['room']}=1&"
-                                   f"house_material%255B6%255D={self.params['house_material%255B6%255D']}&"
+                                   f"house_material%5B6%5D={self.params['house_material%5B6%5D']}&"
                                    f"minfloorn={self.params['minfloorn']}&"
                                    f"maxfloorn={self.params['maxfloorn']}&"
                                    f"maxfloorn={self.params['maxfloorn']}&"
                                    f"min_house_year={self.params['min_house_year']}&"
-                                   f"max_house_year={self.params['max_house_year']}&"
+                                   f"max_house_year={self.params['max_house_year']}"
                                    )
             return response.content
