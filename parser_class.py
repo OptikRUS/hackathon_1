@@ -8,7 +8,6 @@ class CianParser:
         'engine_version': '2',
         'offer_type': 'flat',
         'origin': 'map',
-        'minfloorn': '1',
     }
 
     headers = {
@@ -56,6 +55,7 @@ class CianParser:
         self.params["bbox"] = bbox
         self.params[f"room{room_type}"] = '1'
         self.params["house_material%5B6%5D"] = house_material_type
+        self.params["minfloorn"] = floor
         self.params["maxfloorn"] = floor
         self.params["min_house_year"] = min_year
         self.params["max_house_year"] = max_year
