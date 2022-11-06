@@ -127,7 +127,12 @@ class PoolEstimate:
 
     def make_pull_data_ready_for_work(
             self,
-            df):
+            df,
+            etalon_room_count,
+            etalon_segment,
+            etalon_material,
+            etalon_max_floor
+    ):
         df['Балкон'] = np.where(df['Балкон'].str.contains('Нет', case=False), 0, 1)
 
         replacements = {
@@ -141,17 +146,23 @@ class PoolEstimate:
         df.replace(replacements, inplace=True, regex=True)
         df['Ремонт'] = np.where(df['Ремонт'].isna(), 0, df['Ремонт'])
 
-        df.dropna(inplace=True)
-
         replacements = {
             'Материал стен': {
-                'Монолит': 0,
-                'Кирп': 1,
-                'Панел': 2,
+                'Монолит|монолит': 0,
+                'Кирп|кирп': 1,
+                'Панел|панел': 2,
             }
         }
 
         df.replace(replacements, inplace=True, regex=True)
+
+        df['Количество комнат'] = np.where(df['Количество комнат'] == etalon_room_count, df['Количество комнат'],
+                                           np.nan)
+        df['Сегмент'] = np.where(df['Сегмент'] == etalon_segment, df['Сегмент'], np.nan)
+        df['Этажность дома'] = np.where(df['Этажность дома'] == etalon_max_floor, df['Этажность дома'], np.nan)
+        df['Материал стен'] = np.where(df['Материал стен'] == etalon_material, df['Материал стен'], np.nan)
+
+        df.dropna(inplace=True)
         return df
 
     def calculate_floor_k(self, df: pd.DataFrame, etalon_floor_value):
@@ -488,67 +499,70 @@ class PoolEstimate:
     """
     def calculate_pull(
             self,
-            pull: io,
-            address="qwe",
-            room_count=2,
-            material="2",
-            segment="2",
-            etalon_price: float = 323500,
-            max_floor=21,
+            pull: BytesIO,
+            etalon_json,
             auction_cor=True,
-            floor_cor=14,
-            square_cor=70.8,
-            kitchen_square_cor=12.7,
-            balcony_cor=False,
-            metro_stepway_cor=11,
-            repair_state='муниципальный ремонт'
+            floor_cor=True,
+            square_cor=True,
+            kitchen_square_cor=True,
+            balcony_cor=True,
+            metro_stepway_cor=False,
+            repair_state=True
     ):
-        etalon_floor_value = 0
+        df_etalon = pd.read_json(etalon_json, orient='records')
 
-        # etalon_df = pd.read_json()
+        etalon_floor = df_etalon.iloc[:, 5][0]
+        etalon_room_count = df_etalon.iloc[:, 1][0]
+        etalon_segment = df_etalon.iloc[:, 2][0]
+        etalon_max_floor = df_etalon.iloc[:, 3][0]
+        etalon_material = df_etalon.iloc[:, 4][0]
+        etalon_price = df_etalon.iloc[:, 11][0]
+        etalon_square = df_etalon.iloc[:, 6][0]
+        etalon_kitchen_square = df_etalon.iloc[:, 7][0]
+        etalon_has_balkony = df_etalon.iloc[:, 8][0]
+        etalon_metro_stepway = df_etalon.iloc[:, 9][0]
+        etalon_repair_state = df_etalon.iloc[:, 10][0]
 
         if floor_cor:
-            if floor_cor == max_floor:
-                etalon_floor_value = 2
-            elif 1 < floor_cor < max_floor:
-                etalon_floor_value = 1
+            if etalon_floor == etalon_max_floor:
+                etalon_floor = 2
+            elif 1 < etalon_floor < etalon_max_floor:
+                etalon_floor = 1
 
         auction_value = -0.045 if auction_cor else 0
-
-        has_balkony = 0
-        if has_balkony:
-            has_balkony = 1
-
-        if repair_state:
-            repair_state = 1 if repair_state.lower() == 'муниципальный ремонт' else (
-                0 if repair_state.lower() == 'без отделки' else 2)
 
         pull_df = pd.read_excel(pull)
 
         pull_df.rename(columns={
-            "Сегмент (Новостройка, современное жилье, старый жилой фонд)": "Сегмент",
-            "Состояние (без отделки, муниципальный ремонт, с современная отделка)": "Ремонт",
-            "Наличие балкона/лоджии": "Балкон",
-            "Материал стен (Кипич, панель, монолит)": "Материал стен"
+            pull_df.columns[2]: "Сегмент",
+            pull_df.columns[10]: "Ремонт",
+            pull_df.columns[8]: "Балкон",
+            pull_df.columns[4]: "Материал стен"
         }, inplace=True)
 
-        pull_df = self.make_pull_data_ready_for_work(pull_df)
+        pull_df = self.make_pull_data_ready_for_work(
+            pull_df,
+            etalon_room_count=etalon_room_count,
+            etalon_segment=etalon_segment,
+            etalon_material=etalon_material,
+            etalon_max_floor=etalon_max_floor
+        )
 
         if floor_cor:
-            pull_df['ЭтажК'] = self.calculate_floor_k(pull_df, etalon_floor_value)
+            pull_df['ЭтажК'] = self.calculate_floor_k(pull_df, etalon_floor)
         if square_cor:
-            pull_df['ПлощадьК'] = self.calculate_square_k(pull_df, square_cor)
+            pull_df['ПлощадьК'] = self.calculate_square_k(pull_df, etalon_square)
         if balcony_cor:
-            pull_df['БалконК'] = self.calculate_balcony_k(pull_df, etalon_balcony=has_balkony)
+            pull_df['БалконК'] = self.calculate_balcony_k(pull_df, etalon_balcony=etalon_has_balkony)
         if kitchen_square_cor:
-            pull_df['КухняК'] = self.calculate_kitchen_k(pull_df, etalon_kitchen_square=kitchen_square_cor)
+            pull_df['КухняК'] = self.calculate_kitchen_k(pull_df, etalon_kitchen_square=etalon_kitchen_square)
         if repair_state:
-            pull_df['РемонтК'] = self.calculate_repair_state_k(pull_df, repair_state)
+            pull_df['РемонтК'] = self.calculate_repair_state_k(pull_df, etalon_repair_state)
 
-        pull_df['Итого сумма, кв метр'] = (etalon_price) * (
+        pull_df['Итого сумма, кв метр'] = etalon_price * (
                 1 + (pull_df['ЭтажК'].astype(float) if floor_cor else 0)
                 + (pull_df['ПлощадьК'].astype(float) if square_cor else 0)
-                + (pull_df['БалконК'].astype(float) if has_balkony else 0)
+                + (pull_df['БалконК'].astype(float) if balcony_cor else 0)
                 + (pull_df['КухняК'].astype(float) if kitchen_square_cor else 0)
                 + auction_value) + (pull_df['РемонтК'] if repair_state else 0)
 
@@ -568,43 +582,16 @@ class PoolEstimate:
             'Материал стен': {
                 0: 'Монолит',
                 1: 'Кирпич',
-                2: 'панельный',
+                2: 'Панельный',
             }
         }
 
         pull_df.replace(replacements, inplace=True, regex=True)
-        dict_etalon = {"row_1": [address,
-                                 room_count,
-                                 segment,
-                                 max_floor,
-                                 material,
-                                 floor_cor,
-                                 square_cor,
-                                 kitchen_square_cor,
-                                 balcony_cor,
-                                 metro_stepway_cor,
-                                 repair_state,
-                                 etalon_price]}
-        df_etalon = pd.DataFrame.from_dict(dict_etalon, orient='index')
 
-        columns = [
-            'Местоположение',
-            'Количество комнат',
-            'Сегмент',
-            'Этажность дома',
-            "Материал стен(Кирпич, панель, монолит)",
-            "Этаж расположения",
-            "Площадь квартиры, кв.м",
-            "Площадь кухни, кв.м",
-            "Балкон",
-            "Удаленность от станции метро, мин.пешком",
-            "Состояние",
-            "Цена за кв метр"
-        ]
-        df_etalon.columns = columns
         writer = pd.ExcelWriter('output_pull.xlsx', engine='openpyxl')
         df_etalon.to_excel(writer, sheet_name='Эталон')
         pull_df.to_excel(writer, sheet_name='Пул')
         writer.close()
 
         return [df_etalon.to_json(orient="records"), pull_df.to_json(orient="records")]
+
