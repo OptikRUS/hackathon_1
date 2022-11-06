@@ -5,7 +5,6 @@ import {
     EstateMap,
     SelectedMapField,
     TypeObjectSelector,
-    InputFile,
 } from "./components";
 import {ESNumberField} from "src/common/components"
 import {SendButton} from "./components/SendButton";
@@ -13,8 +12,9 @@ import {ESSelectField} from "src/common/components/ESSelectField";
 import {useSelector} from "react-redux";
 import {getCurrentCoords, getCurrentAddress} from "../../common/store/estation";
 import axios from "axios";
-import {log} from "util";
 import {toast} from "react-toastify";
+import {TAnalogInResponse, TEtalonInResponse} from "../../common/types";
+import {TableAnalogEtalon} from "./components/Table";
 
 
 const RoomOptions = [
@@ -142,11 +142,17 @@ type TOptional = {
     repair_state: string
 }
 
+export type TStateForResponse = {
+    etalon: TEtalonInResponse[]
+    analog: TAnalogInResponse[]
+}
+
 
 export const Home = () => {
 
     const styles = useMemo(() => createStyle(), [])
     const [loading, setLoading] = useState<boolean>(false)
+    const [tableData, setTableData] = useState<TStateForResponse>({etalon: [], analog: []})
     const center = useSelector(getCurrentCoords)
     const address = useSelector(getCurrentAddress)
     const [state, setState] = useState<TFormState>({
@@ -188,24 +194,34 @@ export const Home = () => {
 
         if (address) {
             required.address = address
+        } else {
+            toast.error('Вы не выбрали адрес')
         }
 
         if (state.floor) {
             required.floor = +state.floor
+        } else {
+            toast.error('Вы не выбрали этаж')
         }
 
         if (state.segment) {
             required.segment = SegmentOptions.find(el => el.key === state.segment)?.label.toLowerCase() || 'современное жилье'
             required.min_year = segmentYears[state.segment as keyof typeof segmentYears].min_year
             required.max_year = segmentYears[state.segment as keyof typeof segmentYears].max_year
+        } else {
+            toast.error('Вы не выбрали сегмент')
         }
 
         if (state.room_type) {
             required.room_type = state.room_type
+        } else {
+            toast.error('Вы не выбрали количество комнат')
         }
 
         if (state.house_material_type) {
             required.house_material_type = state.house_material_type
+        } else {
+            toast.error('Вы не выбрали материал дома')
         }
 
         if (state.floor_cor) {
@@ -228,7 +244,7 @@ export const Home = () => {
         }
 
         if (state.repair_state) {
-            optional.repair_state = state.repair_state
+            optional.repair_state = StateOfFinish.find(el => el.key === state.repair_state)?.label
         }
 
         if (state.auction_cor) {
@@ -240,16 +256,28 @@ export const Home = () => {
 
 
         if (isValid() && DOMAIN) {
-
+            setLoading(() => true)
             const params = {...required, ...optional}
 
-            axios.get(`${DOMAIN}/analog`, {params})
+            axios.get<{ etalon: string, analog: string }>(`${DOMAIN}/analog`, {params})
                 .then((res) => res.data)
                 .then((data) => {
-                    console.log(data)
+                    setLoading(() => false)
+
+                    const etalon = JSON.parse(data.etalon) as TEtalonInResponse[]
+                    const analog = JSON.parse(data.analog) as TAnalogInResponse[]
+                    setTableData(() => ({etalon, analog}))
+                })
+                .catch((err) => {
+                    setLoading(() => false)
+                    if (err instanceof Error) {
+                        toast.error(err.message)
+                    } else {
+                        toast.error('Oops... unknown error')
+                    }
                 })
         } else {
-            toast.error('Oops... something wrong')
+            toast.error('Oops... wrong domain')
         }
 
     }
@@ -339,14 +367,12 @@ export const Home = () => {
                     />
                 </Box>
             </Box>
-            <Box>
-                <InputFile setFile={handleChange('pool')} file={state.pool}/>
-            </Box>
             <SendButton
                 loading={loading}
                 onClick={handleSend}
             />
-
+            {tableData.etalon.length > 0 && <TableAnalogEtalon tableData={tableData} file={state.pool}
+                                                               setFile={handleChange('pool')}/>}
         </Box>
     )
 }

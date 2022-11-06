@@ -8,6 +8,7 @@
     "@mui/icons-material": "^5.10.9",
     "@mui/lab": "^5.0.0-alpha.106",
     "@mui/material": "^5.10.12",
+    "@mui/x-data-grid": "^5.17.10",
     "@pbe/react-yandex-maps": "^1.2.1",
     "@reduxjs/toolkit": "^1.8.6",
     "@testing-library/jest-dom": "^5.16.5",

@@ -41,7 +41,7 @@ const InputFileRaw = ({file, setFile}: TInputFileProps) => {
     }
 
     return (
-        <Box sx={{ml: 3}}>
+        <Box sx={{ml: 3, mt: 3}}>
             <Button sx={{width: '200px'}} variant="contained" color="success" component="label">
                 {file ? cutFileName(file.name) : 'Прикрепить пул'}
                 <input onChange={onChange} hidden type="file"/>
