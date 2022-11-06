@@ -25,6 +25,7 @@ app.add_middleware(
 @app.get("/analog")
 async def get_etalon_and_analog(
         bbox: str,
+        center: str,
         room_type: int,
         house_material_type: int,
         floor: int,
@@ -63,13 +64,15 @@ async def get_etalon_and_analog(
     `repair_state:` состояниие ремонта\n
     """
     try:
-        response = CianParser(bbox=bbox,
-                              room_type=room_type,
-                              floor=floor,
-                              house_material_type=house_material_type,
-                              min_year=min_year,
-                              max_year=max_year
-                              )
+        response = CianParser(
+            bbox=bbox,
+            center=center,
+            room_type=room_type,
+            floor=floor,
+            house_material_type=house_material_type,
+            min_year=min_year,
+            max_year=max_year
+        )
 
         etalon, analog = estimation.calculate_cor(
             data=response.get_doc,
