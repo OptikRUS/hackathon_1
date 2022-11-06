@@ -21,3 +21,5 @@ services:
       npm install &&
       npm start
       "
+    depends_on:
+      - backend
