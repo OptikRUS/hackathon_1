@@ -68,20 +68,5 @@ class CianParser:
         with requests.session() as session:
             session.headers = self.headers
             scraper = cfscrape.create_scraper(sess=session)
-            response = scraper.get(f"{self.url}?"
-                                   f"deal_type={self.params['deal_type']}&"
-                                   f"engine_version={self.params['engine_version']}&"
-                                   f"offer_type={self.params['offer_type']}&"
-                                   f"origin={self.params['origin']}&"
-                                   f"zoom={self.params['zoom']}&"
-                                   f"bbox={self.params['bbox']}&"
-                                   f"center={self.params['center']}&"
-                                   f"room{self.params['room']}=1&"
-                                   f"house_material%5B6%5D={self.params['house_material%5B6%5D']}&"
-                                   f"minfloorn={self.params['minfloorn']}&"
-                                   f"maxfloorn={self.params['maxfloorn']}&"
-                                   f"maxfloorn={self.params['maxfloorn']}&"
-                                   f"min_house_year={self.params['min_house_year']}&"
-                                   f"max_house_year={self.params['max_house_year']}"
-                                   )
+            response = scraper.get(f"{self.url}?deal_type={self.params['deal_type']}&engine_version={self.params['engine_version']}&offer_type={self.params['offer_type']}&origin={self.params['origin']}&zoom={self.params['zoom']}&bbox={self.params['bbox']}&center={self.params['center']}&room{self.params['room']}=1&house_material%5B6%5D={self.params['house_material%5B6%5D']}&minfloorn={self.params['minfloorn']}&maxfloorn={self.params['maxfloorn']}&maxfloorn={self.params['maxfloorn']}&min_house_year={self.params['min_house_year']}&max_house_year={self.params['max_house_year']}")
             return response.content
