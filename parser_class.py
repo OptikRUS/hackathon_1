@@ -68,6 +68,7 @@ class CianParser:
         with requests.session() as session:
             session.headers = self.headers
             scraper = cfscrape.create_scraper(sess=session)
+            # через params нельзя, потому что %2C -> %252C
             response = scraper.get(f"{self.url}?"
                                    f"deal_type={self.params['deal_type']}&"
                                    f"engine_version={self.params['engine_version']}&"
@@ -82,5 +83,4 @@ class CianParser:
                                    f"maxfloorn={self.params['maxfloorn']}&"
                                    f"min_house_year={self.params['min_house_year']}&"
                                    f"max_house_year={self.params['max_house_year']}")
-            print(response.url)
             return response.content
